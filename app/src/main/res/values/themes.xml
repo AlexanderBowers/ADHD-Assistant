@@ -1,9 +1,98 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.ADHDAssistant" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ADHDAssistant" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Shape overrides: rounder than Material3 defaults -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
+
+        <!-- Typography: Nunito -->
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="fontFamily">@font/nunito</item>
     </style>
 
-    <style name="Theme.ADHDAssistant" parent="Base.Theme.ADHDAssistant" />
+    <!-- Shape tokens: rounder than default -->
+    <style name="ShapeSmall" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerRadius">12dp</item>
+    </style>
+    <style name="ShapeMedium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerRadius">20dp</item>
+    </style>
+    <style name="ShapeLarge" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerRadius">28dp</item>
+    </style>
+
+    <!-- Alert Activity: warm gradient background, NOT dark -->
+    <style name="Theme.ADHDAssistant.Alert" parent="Theme.ADHDAssistant">
+        <item name="android:windowBackground">@color/alert_gradient_top</item>
+        <item name="android:statusBarColor">@color/alert_gradient_top</item>
+    </style>
+
+    <!-- Onboarding: full warm cream -->
+    <style name="Theme.ADHDAssistant.Onboarding" parent="Theme.ADHDAssistant">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+
+    <!-- Button styles: pill-shaped by default -->
+    <style name="Widget.ADHDAssistant.Button" parent="Widget.Material3.Button">
+        <item name="cornerRadius">999dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+
+    <style name="Widget.ADHDAssistant.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">999dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="strokeWidth">1.5dp</item>
+    </style>
+
+    <style name="Widget.ADHDAssistant.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="cornerRadius">999dp</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+
+    <!-- Card: softer shadow, warmer background -->
+    <style name="Widget.ADHDAssistant.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+    </style>
+
+    <!-- Chip text appearance -->
+    <style name="TextAppearance.ADHDAssistant.Chip" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="android:textSize">14sp</item>
+    </style>
 </resources>

@@ -1,3 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ADHD Assistant</string>
+    <string name="app_tagline">A friendly nudge, when you need it</string>
+
+    <!-- ── Home Screen ──────────────────────────────────────────────── -->
+    <string name="status_tracking">Tracking quietly in the background</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_needs_permission">One quick setup step needed</string>
+    <string name="today_so_far">Today so far</string>
+    <string name="checkins_today">%1$d check-ins today</string>
+    <string name="put_it_down_count">Put it down %1$d×</string>
+    <string name="intentions_label">Today\'s intention</string>
+    <string name="intentions_more">+ %1$d more intentions</string>
+    <string name="no_intentions">No intentions set yet — want to add one?</string>
+    <string name="nav_intentions">✨ My Intentions</string>
+    <string name="nav_week">📊 My Week</string>
+    <string name="nav_settings">⚙️ Settings</string>
+    <string name="nav_profiles">🗂 Routines</string>
+
+    <!-- ── Alert Screen ────────────────────────────────────────────── -->
+    <!-- First check-in -->
+    <string name="alert_greeting_first">Quick check-in!</string>
+    <string name="alert_emoji_first">👋</string>
+    <string name="alert_message_first">You\'ve been here for about &lt;b>%1$s minutes&lt;/b>.\nTotally fine — just wanted to say hi 🙂</string>
+
+    <!-- Repeat check-in (2nd+ without putting it down) -->
+    <string name="alert_greeting_repeat">Hey again!</string>
+    <string name="alert_emoji_repeat">😊</string>
+    <string name="alert_message_repeat">Still here — you\'ve been here about &lt;b>%1$s minutes&lt;/b> now.\nNo worries, still with you.</string>
+
+    <!-- Many repeats (5+) -->
+    <string name="alert_greeting_many">We keep meeting like this!</string>
+    <string name="alert_emoji_many">😄</string>
+    <string name="alert_message_many">You\'ve been here a while. Want to try putting it down, just this once?\nYou can always come back.</string>
+
+    <!-- What brought you here section -->
+    <string name="alert_grounding_label">What brought you here?</string>
+    <string name="alert_chip_browsing">Just browsing</string>
+    <string name="alert_chip_lookup">Looking something up</string>
+    <string name="alert_chip_fun">Something fun</string>
+    <string name="alert_chip_work">Work stuff</string>
+    <string name="alert_chip_social">Catching up</string>
+
+    <!-- Action buttons — zero judgment, present tense, positive framing -->
+    <string name="alert_btn_done">Alright, wrapping up 👍</string>
+    <string name="alert_btn_useful">Actually doing something useful ✨</string>
+    <string name="alert_btn_continue">Keep going for now</string>
+
+    <!-- Grounding moment (after "wrapping up") -->
+    <string name="grounding_emoji">🌱</string>
+    <string name="grounding_title">Nice one.</string>
+    <string name="grounding_message_with_chip">You were %1$s — and now you\'re moving on.\nThat\'s the whole game. 🙂</string>
+    <string name="grounding_message_generic">Every time you notice and pause, that\'s a win.\nSeriously.</string>
+    <string name="grounding_top_intention">📋 Next up</string>
+    <string name="grounding_cta">Let\'s go 🚀</string>
+
+    <!-- ── "I'm doing something useful" flow ──────────────────────── -->
+    <string name="useful_title">Sounds useful 🙌</string>
+    <string name="useful_subtitle">No problem at all. What are you working on?\nI\'ll give you some space.</string>
+    <string name="useful_opt_navigation">🗺 Navigation</string>
+    <string name="useful_opt_music">🎵 Music / Podcast</string>
+    <string name="useful_opt_work">📝 Work task</string>
+    <string name="useful_opt_reading">📰 Reading</string>
+    <string name="useful_opt_messaging">💬 Messaging someone</string>
+    <string name="useful_opt_photos">📸 Taking photos</string>
+    <string name="useful_btn_space">Give me %1$d minutes ⏱</string>
+    <string name="useful_btn_default">Give me some space ⏱</string>
+    <string name="useful_btn_nevermind">Never mind, I\'m done</string>
+
+    <!-- ── Adaptive threshold suggestion ─────────────────────────── -->
+    <string name="adaptive_title">Want to adjust your timing? 🤔</string>
+    <string name="adaptive_message">You\'ve been continuing past your check-ins a lot lately — and that\'s totally okay. Want to try checking in every %1$d minutes instead of %2$d? We can always change it back.</string>
+    <string name="adaptive_btn_yes">Yeah, let\'s try that</string>
+    <string name="adaptive_btn_no">Keep it as is</string>
+
+    <!-- ── Session summary (screen-off notification) ─────────────── -->
+    <string name="summary_channel_name">Daily Summary</string>
+    <string name="summary_channel_desc">A gentle end-of-session note</string>
+    <string name="summary_title">That\'s a wrap for now 🌙</string>
+    <string name="summary_zero">No check-ins today — the tracking\'s ready whenever you are.</string>
+    <string name="summary_one">1 check-in today. Every one counts 🌟</string>
+    <string name="summary_few">%1$d check-ins today. Each one is a moment of self-awareness.\nThat\'s genuinely great.</string>
+    <string name="summary_many">%1$d check-ins today — you\'re really paying attention to yourself.\n🌟 That matters a lot.</string>
+
+    <!-- ── Intentions (renamed from Chores) ───────────────────────── -->
+    <string name="intentions_screen_title">Intentions 📋</string>
+    <string name="intentions_screen_subtitle">These show up on your check-ins as a gentle reminder of what you were doing.</string>
+    <string name="intentions_hint">What do you want to get done?</string>
+    <string name="intentions_add">Add</string>
+    <string name="intentions_save">Save Intentions</string>
+    <string name="intentions_empty">Nothing here yet.\nAdd what you\'re planning to do today.</string>
+    <string name="intentions_hint_reorder">Drag to reorder · swipe left to remove</string>
+    <string name="intentions_undo_remove">Undo</string>
+    <string name="intentions_on_alert">You were planning to:</string>
+
+    <!-- ── Routines / Profiles (Pro) ──────────────────────────────── -->
+    <string name="routines_title">Routines</string>
+    <string name="routines_subtitle">Different rhythms for different parts of your day.</string>
+    <string name="routines_active_now">Active now ✓</string>
+    <string name="routines_auto_label">Auto</string>
+    <string name="routines_add">New Routine</string>
+    <string name="routines_delete_confirm">Remove \"%1$s\"?</string>
+    <string name="routines_delete_confirm_detail">This can\'t be undone. Child routines that inherit from it will lose their parent.</string>
+    <string name="routines_delete_yes">Remove it</string>
+    <string name="routines_inherited_from">Inherits from %1$s</string>
+    <string name="routines_conflict_title">These routines overlap 👀</string>
+    <string name="routines_conflict_ok">Got it, keep both active</string>
+    <string name="routines_conflict_cancel">Never mind</string>
+
+    <!-- ── Settings ───────────────────────────────────────────────── -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_usage_permission">Usage access</string>
+    <string name="settings_usage_permission_desc">Needed to see which app is in the foreground. Your data stays on your device.</string>
+    <string name="settings_grant">Set up access</string>
+    <string name="settings_checkin_after">Check in after</string>
+    <string name="settings_checkin_unit">minutes</string>
+    <string name="settings_active_hours">When to check in</string>
+    <string name="settings_background">Keep tracking in background</string>
+    <string name="settings_background_desc">Tracking continues even when the app is closed.</string>
+    <string name="settings_excluded">Apps I use intentionally (Pro)</string>
+    <string name="settings_excluded_desc">These won\'t trigger a check-in.</string>
+    <string name="settings_upgrade">Unlock Pro · %1$s</string>
+    <string name="settings_upgrade_default">Unlock Pro · $0.99</string>
+    <string name="settings_restore">Restore purchase</string>
+    <string name="settings_pro_active">Pro ✓ — thank you!</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_privacy_note">Your data never leaves your device. No ads. Ever.</string>
+
+    <!-- ── Billing ────────────────────────────────────────────────── -->
+    <string name="pro_title">Unlock Pro</string>
+    <string name="pro_desc">Routines, weekly patterns, and intentional-app lists. One-time, yours forever.</string>
+    <string name="pro_success">Pro unlocked! Thank you for supporting the app 🙏</string>
+    <string name="pro_failed">Something went wrong — please try again.</string>
+    <string name="pro_restored">Purchase restored! Welcome back 🙌</string>
+    <string name="pro_none_found">No previous purchase found.</string>
+
+    <!-- ── Onboarding ─────────────────────────────────────────────── -->
+    <string name="onboarding_p1_title">For people with\nhonest intentions</string>
+    <string name="onboarding_p1_body">You opened your phone to Google something.\nNext thing you know, it\'s been an hour.\n\nThis app gently taps your shoulder — no judgment, no alarm — just a friendly check-in.</string>
+    <string name="onboarding_p2_title">One permission needed</string>
+    <string name="onboarding_p2_body">To know which app is active, I need Usage Access.\n\nYour data never leaves your phone. There are no ads. There is no server. Just you and your phone.</string>
+    <string name="onboarding_p2_cta">Set up access</string>
+    <string name="onboarding_p3_title">What should I call\nyour first routine?</string>
+    <string name="onboarding_p3_body">Pick a preset to start — you can always change everything later.</string>
+    <string name="onboarding_p3_cta">Start with this one</string>
+    <string name="onboarding_done">Let\'s go 🚀</string>
+
+    <!-- ── Excluded Apps (Pro) ────────────────────────────────────── -->
+    <string name="excluded_title">Apps I use intentionally</string>
+    <string name="excluded_subtitle">These won\'t trigger a check-in. Good for navigation, music, or anything you use on purpose.</string>
+    <string name="excluded_search">Search apps…</string>
+    <string name="excluded_save">Save</string>
+    <string name="excluded_count">%1$d apps found</string>
+
+    <!-- ── Stats / Weekly (Pro) ──────────────────────────────────── -->
+    <string name="stats_title">Your Week</string>
+    <string name="stats_subtitle">No grades. Just patterns. 🌿</string>
+    <string name="stats_total_checkins">Check-ins</string>
+    <string name="stats_put_down">Put it down</string>
+    <string name="stats_put_down_rate">Put it down rate</string>
+    <string name="stats_top_trigger">Most common check-in trigger</string>
+    <string name="stats_encouragement_low">Every check-in is you noticing. That\'s the whole skill.</string>
+    <string name="stats_encouragement_mid">You noticed %1$d times this week. That\'s %1$d moments of self-awareness most people never have.</string>
+    <string name="stats_encouragement_high">%1$d check-ins this week — you\'re genuinely paying attention to yourself. 🌟 That matters.</string>
+    <string name="stats_profile_trigger">%1$s · %2$s rule</string>
+    <string name="stats_no_data">No check-ins yet this week.\nTracking is ready when you are.</string>
+
+    <!-- ── Errors — always kind ───────────────────────────────────── -->
+    <string name="error_no_permission">Usage access isn\'t set up yet — tap here to fix that quickly.</string>
+    <string name="error_generic">Something went wrong. Let\'s try that again.</string>
+    <string name="error_billing_unavailable">Store not available right now. Try again in a moment.</string>
+
+    <!-- ── Service notification ────────────────────────────────────────── -->
+    <string name="status_active">Tracking focus…</string>
+
+    <!-- ── Excluded Apps empty state ───────────────────────────────── -->
+    <string name="excluded_empty">No apps added yet. Tap + to add one.</string>
+
+    <!-- ── Accessibility ──────────────────────────────────────────── -->
+    <string name="cd_exclude_toggle">Mark app as intentional — won\'t trigger check-ins</string>
+    <string name="cd_drag_handle">Drag to reorder intention</string>
+    <string name="cd_profile_toggle">Toggle routine active</string>
+    <string name="cd_checkin_count">Number of check-ins today</string>
+    <string name="cd_add_intention">Add intention</string>
+    <string name="cd_delete_intention">Delete intention</string>
+    <string name="cd_add_excluded_app_btn">Add app to intentional list</string>
+    <string name="cd_app_icon_excluded">App icon</string>
+    <string name="btn_remove_app">Remove</string>
 </resources>

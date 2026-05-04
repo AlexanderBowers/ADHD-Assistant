@@ -1,5 +1,58 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary: warm amber — energising without being alarming -->
+    <color name="primary">#D4823A</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#FFE4C0</color>
+    <color name="on_primary_container">#2C1200</color>
+    <color name="primary_dark">#C07028</color>
+
+    <!-- Secondary: soft sage green — used for completion / positive moments -->
+    <color name="secondary">#4EA878</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#DFFAED</color>
+    <color name="on_secondary_container">#00210F</color>
+
+    <!-- Tertiary: warm dusty rose — for variety, not used for alerts -->
+    <color name="tertiary">#A0687A</color>
+    <color name="tertiary_container">#FFD8E2</color>
+
+    <!-- Backgrounds: warm cream — not white, not sterile -->
+    <color name="background">#FFFBF3</color>
+    <color name="surface">#FFFDF8</color>
+    <color name="surface_variant">#F5EAD8</color>
+    <color name="surface_container">#FFF4E4</color>
+
+    <!-- Text on surfaces -->
+    <color name="on_background">#2C1600</color>
+    <color name="on_surface">#2C1600</color>
+    <color name="on_surface_variant">#7A5530</color>
+
+    <!-- Outline / dividers — warm, not cold grey -->
+    <color name="outline">#E0C8A8</color>
+    <color name="outline_variant">#F0DCBC</color>
+
+    <!-- Error: soft terracotta — warmer than standard red -->
+    <color name="error">#C0533A</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFE0D8</color>
+
+    <!-- Alert screen: sunrise gradient endpoints -->
+    <color name="alert_gradient_top">#FFF8EE</color>
+    <color name="alert_gradient_mid">#FFE8C0</color>
+    <color name="alert_gradient_bot">#FFD8A0</color>
+
+    <!-- Grounding / completion screen: warm green -->
+    <color name="grounding_bg">#F0FBF4</color>
+
+    <!-- Chip backgrounds -->
+    <color name="chip_bg">#FFF3E4</color>
+    <color name="chip_bg_selected">#FFE0B0</color>
+    <color name="chip_border_selected">#D4823A</color>
+
+    <!-- Night mode overrides in res/values-night/colors.xml:
+         surface → #1E1408  (warm dark, not cold grey)
+         background → #181008
+         primary → #FFB870  (lighter amber on dark)
+         on_surface → #F5E8D0
+    -->
 </resources>

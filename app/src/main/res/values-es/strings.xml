@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Asistente TDAH</string>
+    <string name="app_tagline">Un empujoncito amable, cuando lo necesitas</string>
+
+    <!-- Pantalla de inicio -->
+    <string name="status_tracking">Rastreando en silencio en segundo plano</string>
+    <string name="status_paused">En pausa</string>
+    <string name="status_needs_permission">Se necesita un paso de configuración rápido</string>
+    <string name="today_so_far">Hoy hasta ahora</string>
+    <string name="checkins_today">%1$d check-ins hoy</string>
+    <string name="put_it_down_count">Lo dejé %1$d×</string>
+    <string name="intentions_label">Intención de hoy</string>
+    <string name="intentions_more">+ %1$d intenciones más</string>
+    <string name="no_intentions">Sin intenciones aún — ¿quieres agregar una?</string>
+    <string name="nav_intentions">✨ Mis intenciones</string>
+    <string name="nav_week">📊 Mi semana</string>
+    <string name="nav_settings">⚙️ Configuración</string>
+    <string name="nav_profiles">🗂 Rutinas</string>
+
+    <!-- Pantalla de alerta -->
+    <string name="alert_greeting_first">¡Check-in rápido!</string>
+    <string name="alert_emoji_first">👋</string>
+    <string name="alert_message_first">Llevas aquí unos &lt;b>%1$s minutos&lt;/b>.\nTotalmente bien — solo quería saludarte 🙂</string>
+
+    <string name="alert_greeting_repeat">¡Hola de nuevo!</string>
+    <string name="alert_emoji_repeat">😊</string>
+    <string name="alert_message_repeat">Sigues aquí — llevas unos &lt;b>%1$s minutos&lt;/b> ahora.\nSin problema, aquí contigo.</string>
+
+    <string name="alert_greeting_many">¡Seguimos encontrándonos!</string>
+    <string name="alert_emoji_many">😄</string>
+    <string name="alert_message_many">Llevas un buen rato aquí. ¿Quieres intentar dejarlo por esta vez?\nSiempre puedes volver.</string>
+
+    <string name="alert_grounding_label">¿Qué te trajo aquí?</string>
+    <string name="alert_chip_browsing">Solo navegando</string>
+    <string name="alert_chip_lookup">Buscando algo</string>
+    <string name="alert_chip_fun">Algo divertido</string>
+    <string name="alert_chip_work">Trabajo</string>
+    <string name="alert_chip_social">Poniéndome al día</string>
+
+    <string name="alert_btn_done">Bueno, terminando 👍</string>
+    <string name="alert_btn_useful">En realidad estoy haciendo algo útil ✨</string>
+    <string name="alert_btn_continue">Seguir por ahora</string>
+
+    <string name="grounding_emoji">🌱</string>
+    <string name="grounding_title">Bien hecho.</string>
+    <string name="grounding_message_with_chip">Estabas %1$s — y ahora sigues adelante.\nEso es todo. 🙂</string>
+    <string name="grounding_message_generic">Cada vez que lo notas y haces una pausa, eso es una victoria.\nEn serio.</string>
+    <string name="grounding_top_intention">📋 A continuación</string>
+    <string name="grounding_cta">¡Vamos! 🚀</string>
+
+    <!-- Flujo "Estoy haciendo algo útil" -->
+    <string name="useful_title">Suena útil 🙌</string>
+    <string name="useful_subtitle">Sin problema. ¿En qué estás trabajando?\nTe doy espacio.</string>
+    <string name="useful_opt_navigation">🗺 Navegación</string>
+    <string name="useful_opt_music">🎵 Música / Podcast</string>
+    <string name="useful_opt_work">📝 Tarea de trabajo</string>
+    <string name="useful_opt_reading">📰 Leyendo</string>
+    <string name="useful_opt_messaging">💬 Escribiendo a alguien</string>
+    <string name="useful_opt_photos">📸 Tomando fotos</string>
+    <string name="useful_btn_space">Dame %1$d minutos ⏱</string>
+    <string name="useful_btn_default">Dame un poco de espacio ⏱</string>
+    <string name="useful_btn_nevermind">No importa, ya terminé</string>
+
+    <!-- Sugerencia adaptativa -->
+    <string name="adaptive_title">¿Quieres ajustar tu tiempo? 🤔</string>
+    <string name="adaptive_message">Has estado continuando más allá de tus check-ins mucho últimamente — y está bien. ¿Quieres intentar hacer check-in cada %1$d minutos en lugar de %2$d? Siempre podemos cambiarlo.</string>
+    <string name="adaptive_btn_yes">Sí, vamos a intentarlo</string>
+    <string name="adaptive_btn_no">Dejarlo como está</string>
+
+    <!-- Resumen de sesión -->
+    <string name="summary_channel_name">Resumen diario</string>
+    <string name="summary_channel_desc">Una nota amable al final de la sesión</string>
+    <string name="summary_title">Por ahora es suficiente 🌙</string>
+    <string name="summary_zero">Sin check-ins hoy — el rastreador está listo cuando tú lo estés.</string>
+    <string name="summary_one">1 check-in hoy. Cada uno cuenta 🌟</string>
+    <string name="summary_few">%1$d check-ins hoy. Cada uno es un momento de autoconciencia.\nEso es genial.</string>
+    <string name="summary_many">%1$d check-ins hoy — de verdad te estás prestando atención.\n🌟 Eso importa mucho.</string>
+
+    <!-- Intenciones -->
+    <string name="intentions_screen_title">Intenciones 📋</string>
+    <string name="intentions_screen_subtitle">Aparecen en tus check-ins como un recordatorio amable de lo que estabas haciendo.</string>
+    <string name="intentions_hint">¿Qué quieres lograr?</string>
+    <string name="intentions_add">Agregar</string>
+    <string name="intentions_save">Guardar intenciones</string>
+    <string name="intentions_empty">Nada aquí todavía.\nAgrega lo que planeas hacer hoy.</string>
+    <string name="intentions_hint_reorder">Arrastra para reordenar · desliza a la izquierda para eliminar</string>
+    <string name="intentions_undo_remove">Deshacer</string>
+    <string name="intentions_on_alert">Estabas planeando:</string>
+
+    <!-- Rutinas / Perfiles (Pro) -->
+    <string name="routines_title">Rutinas</string>
+    <string name="routines_subtitle">Diferentes ritmos para diferentes partes de tu día.</string>
+    <string name="routines_active_now">Activo ahora ✓</string>
+    <string name="routines_auto_label">Auto</string>
+    <string name="routines_add">Nueva rutina</string>
+    <string name="routines_delete_confirm">¿Eliminar \"%1$s\"?</string>
+    <string name="routines_delete_confirm_detail">Esto no se puede deshacer. Las rutinas secundarias que la heredan perderán su padre.</string>
+    <string name="routines_delete_yes">Eliminar</string>
+    <string name="routines_inherited_from">Hereda de %1$s</string>
+    <string name="routines_conflict_title">Estas rutinas se superponen 👀</string>
+    <string name="routines_conflict_ok">Entendido, mantener ambas activas</string>
+    <string name="routines_conflict_cancel">No importa</string>
+
+    <!-- Configuración -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_usage_permission">Acceso de uso</string>
+    <string name="settings_usage_permission_desc">Necesario para ver qué app está en primer plano. Tus datos permanecen en tu dispositivo.</string>
+    <string name="settings_grant">Configurar acceso</string>
+    <string name="settings_checkin_after">Check-in después de</string>
+    <string name="settings_checkin_unit">minutos</string>
+    <string name="settings_active_hours">Cuándo hacer check-in</string>
+    <string name="settings_background">Seguir rastreando en segundo plano</string>
+    <string name="settings_background_desc">El rastreo continúa incluso cuando la app está cerrada.</string>
+    <string name="settings_excluded">Apps que uso intencionalmente (Pro)</string>
+    <string name="settings_excluded_desc">Estas no activarán un check-in.</string>
+    <string name="settings_upgrade">Desbloquear Pro · %1$s</string>
+    <string name="settings_upgrade_default">Desbloquear Pro · $0.99</string>
+    <string name="settings_restore">Restaurar compra</string>
+    <string name="settings_pro_active">Pro ✓ — ¡gracias!</string>
+    <string name="settings_privacy">Política de privacidad</string>
+    <string name="settings_privacy_note">Tus datos nunca salen de tu dispositivo. Sin anuncios. Nunca.</string>
+
+    <!-- Facturación -->
+    <string name="pro_title">Desbloquear Pro</string>
+    <string name="pro_desc">Rutinas, patrones semanales y listas de apps intencionales. Una vez, tuyo para siempre.</string>
+    <string name="pro_success">¡Pro desbloqueado! Gracias por apoyar la app 🙏</string>
+    <string name="pro_failed">Algo salió mal — por favor intenta de nuevo.</string>
+    <string name="pro_restored">¡Compra restaurada! Bienvenido de vuelta 🙌</string>
+    <string name="pro_none_found">No se encontró ninguna compra anterior.</string>
+
+    <!-- Incorporación -->
+    <string name="onboarding_p1_title">Para personas con\nintenciones honestas</string>
+    <string name="onboarding_p1_body">Abriste el teléfono para buscar algo.\nAl rato ya pasó una hora.\n\nEsta app te da un toquecito amable — sin juicios, sin alarma — solo un check-in amistoso.</string>
+    <string name="onboarding_p2_title">Se necesita un permiso</string>
+    <string name="onboarding_p2_body">Para saber qué app está activa, necesito Acceso de uso.\n\nTus datos nunca salen de tu teléfono. No hay anuncios. No hay servidor. Solo tú y tu teléfono.</string>
+    <string name="onboarding_p2_cta">Configurar acceso</string>
+    <string name="onboarding_p3_title">¿Cómo llamamos\ntu primera rutina?</string>
+    <string name="onboarding_p3_body">Elige un punto de partida — siempre puedes cambiar todo después.</string>
+    <string name="onboarding_p3_cta">Empezar con esta</string>
+    <string name="onboarding_done">¡Vamos! 🚀</string>
+
+    <!-- Apps excluidas (Pro) -->
+    <string name="excluded_title">Apps que uso intencionalmente</string>
+    <string name="excluded_subtitle">Estas no activarán un check-in. Útil para navegación, música o cualquier cosa que uses a propósito.</string>
+    <string name="excluded_search">Buscar apps…</string>
+    <string name="excluded_save">Guardar</string>
+    <string name="excluded_count">%1$d apps encontradas</string>
+
+    <!-- Estadísticas / Semana (Pro) -->
+    <string name="stats_title">Tu semana</string>
+    <string name="stats_subtitle">Sin calificaciones. Solo patrones. 🌿</string>
+    <string name="stats_total_checkins">Check-ins</string>
+    <string name="stats_put_down">Lo dejé</string>
+    <string name="stats_put_down_rate">Tasa de dejar el teléfono</string>
+    <string name="stats_top_trigger">Disparador de check-in más común</string>
+    <string name="stats_encouragement_low">Cada check-in es tú notando. Esa es toda la habilidad.</string>
+    <string name="stats_encouragement_mid">Notaste %1$d veces esta semana. Esos son %1$d momentos de autoconciencia que la mayoría nunca tiene.</string>
+    <string name="stats_encouragement_high">%1$d check-ins esta semana — de verdad te estás prestando atención. 🌟 Eso importa.</string>
+    <string name="stats_profile_trigger">%1$s · regla %2$s</string>
+    <string name="stats_no_data">Sin check-ins esta semana todavía.\nEl rastreador está listo cuando tú lo estés.</string>
+
+    <!-- Errores -->
+    <string name="error_no_permission">El acceso de uso no está configurado — toca aquí para arreglarlo rápido.</string>
+    <string name="error_generic">Algo salió mal. Intentémoslo de nuevo.</string>
+    <string name="error_billing_unavailable">La tienda no está disponible ahora. Inténtalo en un momento.</string>
+
+    <!-- Notificación de servicio -->
+    <string name="status_active">Rastreando el enfoque…</string>
+
+    <!-- Accesibilidad -->
+    <string name="cd_exclude_toggle">Marcar app como intencional — no activará check-ins</string>
+    <string name="cd_drag_handle">Arrastra para reordenar intención</string>
+    <string name="cd_profile_toggle">Activar/desactivar rutina</string>
+    <string name="cd_checkin_count">Número de check-ins hoy</string>
+    <string name="cd_add_intention">Agregar intención</string>
+    <string name="cd_delete_intention">Eliminar intención</string>
+    <string name="cd_add_excluded_app_btn">Agregar app a la lista intencional</string>
+    <string name="cd_app_icon_excluded">Ícono de app</string>
+    <string name="btn_remove_app">Quitar</string>
+    <string name="excluded_empty">Sin apps agregadas aún. Toca + para agregar una.</string>
+</resources>

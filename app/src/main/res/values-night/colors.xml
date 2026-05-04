@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode overrides (Warm Companion palette) -->
+    <color name="primary">#FFB870</color>
+    <color name="on_primary">#542C00</color>
+    <color name="primary_container">#764000</color>
+    <color name="on_primary_container">#FFDDB8</color>
+
+    <color name="background">#181008</color>
+    <color name="surface">#1E1408</color>
+    <color name="on_background">#F5E8D0</color>
+    <color name="on_surface">#F5E8D0</color>
+    <color name="on_surface_variant">#D0C4B4</color>
+    <color name="outline">#998F80</color>
+</resources>

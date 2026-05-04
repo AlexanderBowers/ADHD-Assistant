@@ -1,4 +1,4 @@
-package com.example.adhdassistant.ui
+package com.example.adhdassistant.ui.main
 
 import android.Manifest
 import android.app.AlertDialog
@@ -15,7 +15,7 @@ import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.example.adhdassistant.R
-import com.example.adhdassistant.config.ConfigManager
+import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.context.GeofenceBroadcastReceiver
 import com.example.adhdassistant.tracking.UsageTrackingService
 import com.example.adhdassistant.utils.PermissionManager
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var permissionManager: PermissionManager
     private lateinit var geofencingClient: GeofencingClient
-    private lateinit var configManager: ConfigManager
+    private lateinit var configRepository: ConfigRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
         permissionManager = PermissionManager(this)
         geofencingClient = LocationServices.getGeofencingClient(this)
-        configManager = ConfigManager(this)
+        configRepository = ConfigRepository(this)
 
         findViewById<Button>(R.id.btnStartService).setOnClickListener {
             checkPermissionsAndStart()
@@ -48,7 +48,6 @@ class MainActivity : AppCompatActivity() {
             permissionManager.requestOverlayPermission(this)
             return
         }
-
         registerHomeGeofence()
     }
 
@@ -62,19 +61,23 @@ class MainActivity : AppCompatActivity() {
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             registerHomeGeofence()
         } else {
-            Toast.makeText(this, "Location permission is required for the Geofence.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.msg_location_required), Toast.LENGTH_LONG).show()
         }
     }
 
     private fun registerHomeGeofence() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 100)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                100
+            )
             return
         }
 
         val geofence = Geofence.Builder()
             .setRequestId("HOME")
-            .setCircularRegion(configManager.homeLat, configManager.homeLng, 150f)
+            .setCircularRegion(configRepository.homeLat, configRepository.homeLng, 150f)
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
             .build()
@@ -85,27 +88,29 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
 
         geofencingClient.addGeofences(request, pendingIntent)
             .addOnSuccessListener {
-                val serviceIntent = Intent(this, UsageTrackingService::class.java)
-                startForegroundService(serviceIntent)
-                Toast.makeText(this, "Focus Tracker Active", Toast.LENGTH_SHORT).show()
+                startForegroundService(Intent(this, UsageTrackingService::class.java))
+                Toast.makeText(this, getString(R.string.msg_tracker_active), Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Geofence failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.msg_geofence_failed, e.message), Toast.LENGTH_LONG).show()
             }
     }
 
     private fun showUsageDisclosure() {
         AlertDialog.Builder(this)
-            .setTitle("Usage Access Required")
-            .setMessage("To detect if you have been distracted on your phone for 5 minutes, this app requires 'Usage Access' to monitor which applications are currently open on your screen. This data is strictly used to trigger movement alerts, is processed entirely locally, and never leaves your device.")
-            .setPositiveButton("Grant Permission") { _, _ ->
+            .setTitle(getString(R.string.dialog_usage_title))
+            .setMessage(getString(R.string.dialog_usage_message))
+            .setPositiveButton(getString(R.string.btn_grant)) { _, _ ->
                 permissionManager.requestUsageStatsPermission(this)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
     }
 }

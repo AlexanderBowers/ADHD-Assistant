@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="72dp"
+        android:paddingBottom="40dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🙌"
+            android:textSize="52sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/useful_title"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/useful_subtitle"
+            android:textSize="16sp"
+            android:textColor="@color/on_surface_variant"
+            android:lineSpacingMultiplier="1.4"
+            android:gravity="center" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupUseType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGiveSpace"
+            style="@style/Widget.ADHDAssistant.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="@string/useful_btn_default" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNevermind"
+            style="@style/Widget.ADHDAssistant.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/useful_btn_nevermind" />
+
+    </LinearLayout>
+</ScrollView>

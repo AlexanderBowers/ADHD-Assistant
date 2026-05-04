@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
+        android:name=".ADHDApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -25,7 +26,7 @@
         tools:targetApi="34">
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,20 +35,65 @@
         </activity>
 
         <activity
-            android:name=".ui.MovementEnforcerActivity"
+            android:name=".ui.alert.UsefulSessionActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.alert.AlertActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:launchMode="singleTop" />
 
+        <activity
+            android:name=".ui.chores.ChoreListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.excluded.ExcludedAppsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profiles.ProfileListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profiles.EditProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.stats.StatsActivity"
+            android:exported="false" />
+
         <service
             android:name=".tracking.UsageTrackingService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Digital Wellbeing and Focus Monitoring"/>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Digital Wellbeing and Focus Monitoring" />
         </service>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".tracking.SessionSummaryReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".context.GeofenceBroadcastReceiver"
