@@ -1,34 +1,45 @@
-# Gradle files
-.gradle/
-build/
+# ── Build output ─────────────────────────────────────────────────────────────
+/build
+app/build
+**/build/
 
-# Local configuration file (sdk path, etc)
-local.properties
+# ── Gradle ───────────────────────────────────────────────────────────────────
+.gradle
+gradle-wrapper.jar
+local.properties          # Contains SDK path — never commit
+!gradle-wrapper.properties
 
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
+# ── Android Studio ───────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
 captures/
 .externalNativeBuild/
 .cxx/
-*.aab
+
+# ── SECURITY — never commit these ────────────────────────────────────────────
+*.jks                     # Release keystore — treat like a password
+*.keystore                # Same
+keystore.properties       # File that points to your keystore
+signing.properties
+google-services.json      # If you add Firebase later
+release/                  # Common folder name for signing configs
+
+# ── Generated ─────────────────────────────────────────────────────────────────
+app/src/main/assets/
 *.apk
-output-metadata.json
+*.aab
+*.ap_
+*.dex
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+# ── OS ────────────────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+.Spotlight-V100
+.Trashes
 
-# Keystore files
-*.jks
-*.keystore
-
-# Google Services (e.g. APIs or Firebase)
-google-services.json
-
-# Android Profiling
-*.hprof
+# ── Room schema export (optional — some teams commit this) ───────────────────
+# app/schemas/     ← uncomment this line to ignore schema exports
