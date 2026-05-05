@@ -19,6 +19,7 @@ import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.context.GeofenceBroadcastReceiver
 import com.example.adhdassistant.tracking.UsageTrackingService
 import com.example.adhdassistant.utils.PermissionManager
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
 

@@ -2,10 +2,11 @@ package com.example.adhdassistant.ui.alert
 
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +18,7 @@ import com.example.adhdassistant.domain.AdaptiveThresholdManager
 import com.example.adhdassistant.tracking.ReAlertTracker
 import com.example.adhdassistant.tracking.UsageTrackingService
 import com.google.android.material.chip.Chip
+import com.google.android.material.shape.CornerFamily
 import kotlinx.coroutines.launch
 
 /**
@@ -41,7 +43,6 @@ class AlertActivity : AppCompatActivity() {
         const val EXTRA_DURATION_MS  = "duration_ms"
         const val EXTRA_APP_PACKAGE  = "app_package"
         const val EXTRA_CHORE_TEXT   = "chore_text"
-        const val EXTRA_TRIGGER_DESC = "trigger_desc"
         const val EXTRA_ALERT_LEVEL  = "alert_level"
     }
 
@@ -59,11 +60,17 @@ class AlertActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Show on lock screen — shoulder tap, not alarm
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Warm sunrise gradient — not dark, not alarming
         window.decorView.background = GradientDrawable(
@@ -80,6 +87,10 @@ class AlertActivity : AppCompatActivity() {
 
         configRepository = ConfigRepository(applicationContext)
         database         = AppDatabase.getDatabase(applicationContext)
+
+        onBackPressedDispatcher.addCallback(this) {
+            // No back — user must choose
+        }
 
         durationMs    = intent.getLongExtra(EXTRA_DURATION_MS, 0L)
         appPackage    = intent.getStringExtra(EXTRA_APP_PACKAGE) ?: ""
@@ -115,7 +126,7 @@ class AlertActivity : AppCompatActivity() {
             ReAlertTracker.AlertLevel.MANY -> Greeting(
                 "😄",
                 getString(R.string.alert_greeting_many),
-                getString(R.string.alert_message_many, minutes.toString())
+                getString(R.string.alert_message_many)
             )
         }
 
@@ -150,7 +161,9 @@ class AlertActivity : AppCompatActivity() {
             val chip = Chip(this).apply {
                 text           = label
                 isCheckable    = true
-                chipCornerRadius = resources.getDimension(R.dimen.chip_corner_radius)
+                shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                    .setAllCorners(CornerFamily.ROUNDED, resources.getDimension(R.dimen.chip_corner_radius))
+                    .build()
                 chipStrokeWidth = resources.getDimension(R.dimen.chip_stroke_width)
                 setTextAppearanceResource(R.style.TextAppearance_ADHDAssistant_Chip)
                 setChipBackgroundColorResource(R.color.chip_bg_selector)
@@ -254,8 +267,4 @@ class AlertActivity : AppCompatActivity() {
     private fun sendSnoozeToService(minutes: Int) {
         startService(UsageTrackingService.snoozeIntent(this, minutes))
     }
-
-    // No back — user must choose
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() = Unit
 }

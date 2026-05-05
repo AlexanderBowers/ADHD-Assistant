@@ -1,60 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_checkin_after"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:layout_marginBottom="4dp" />
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize" />
 
-        <SeekBar
-            android:id="@+id/seekBarTimer"
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="60"
-            android:progress="5"
-            android:layout_marginBottom="8dp" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/timerValueText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchBackground"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_background" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_active_hours"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:layout_marginBottom="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/settings_background_desc"
+                android:textAppearance="?attr/textAppearanceLabelSmall" />
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchGeofence"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
+            <Button
+                android:id="@+id/btnManageExclusions"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/settings_excluded" />
 
-        <Button
-            android:id="@+id/btnExcludedApps"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/settings_excluded" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="16dp"
+                android:background="?attr/colorOutlineVariant" />
 
-        <Button
-            android:id="@+id/btnProUpgrade"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_upgrade_default" />
+            <Button
+                android:id="@+id/btnGrantUsageAccess"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/settings_grant" />
 
-    </LinearLayout>
-</ScrollView>
+            <Button
+                android:id="@+id/btnUpgradePro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_upgrade_default" />
+
+            <Button
+                android:id="@+id/btnRestorePurchase"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:text="@string/settings_restore" />
+
+            <TextView
+                android:id="@+id/tvPrivacyPolicy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/settings_privacy"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorPrimary" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -4,27 +4,35 @@
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
-    <ImageView
-        android:id="@+id/appIconView"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="12dp"
-        android:contentDescription="@string/cd_app_icon_excluded" />
-
-    <TextView
-        android:id="@+id/appNameText"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnRemoveApp"
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvPackageName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/cbExclude"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_remove_app"
-        style="?attr/materialButtonOutlinedStyle" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

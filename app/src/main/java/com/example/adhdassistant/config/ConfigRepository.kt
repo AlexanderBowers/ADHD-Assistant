@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -28,17 +29,17 @@ class ConfigRepository(private val context: Context) {
 
     // ─── Keys ─────────────────────────────────────────────────────────────────
     private object Keys {
-        val IS_PRO = booleanPreferencesKey("is_pro")
-        val RUN_IN_BACKGROUND = booleanPreferencesKey("run_in_background")
-        val EXCLUDED_APPS_JSON = stringPreferencesKey("excluded_apps")
-        val CHORE_LIST_JSON = stringPreferencesKey("chore_list")
-        val ACTIVE_PROFILE_ID = longPreferencesKey("active_profile_id")
-        val PROFILES_JSON = stringPreferencesKey("profiles")
-        val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
-
-        // ADDED: Keys for Adaptive Threshold & Summary Managers
-        val LAST_SUMMARY_NOTIF_MS = longPreferencesKey("last_summary_notif_ms")
+        val IS_PRO                  = booleanPreferencesKey("is_pro")
+        val RUN_IN_BACKGROUND       = booleanPreferencesKey("run_in_background")
+        val EXCLUDED_APPS_JSON      = stringPreferencesKey("excluded_apps")
+        val CHORE_LIST_JSON         = stringPreferencesKey("chore_list")
+        val ACTIVE_PROFILE_ID       = longPreferencesKey("active_profile_id")
+        val PROFILES_JSON           = stringPreferencesKey("profiles")
+        val ONBOARDING_COMPLETE     = booleanPreferencesKey("onboarding_complete")
+        val LAST_SUMMARY_NOTIF_MS   = longPreferencesKey("last_summary_notif_ms")
         val ADAPTIVE_THRESHOLD_JSON = stringPreferencesKey("adaptive_threshold_json")
+        val HOME_LAT                = doublePreferencesKey("home_lat")
+        val HOME_LNG                = doublePreferencesKey("home_lng")
     }
 
     // ─── Flows (for observing in ViewModels) ──────────────────────────────────
@@ -57,10 +58,20 @@ class ConfigRepository(private val context: Context) {
             prefs[Keys.CHORE_LIST_JSON]?.deserializeList() ?: emptyList()
         }
 
+    val profilesFlow: Flow<List<Profile>> = context.dataStore.data
+        .catchIOException()
+        .map { prefs ->
+            val json = prefs[Keys.PROFILES_JSON]
+            if (json.isNullOrEmpty()) listOf(defaultProfile())
+            else runCatching { Json.decodeFromString<List<Profile>>(json) }
+                .getOrDefault(listOf(defaultProfile()))
+        }
+
     // ─── Suspend Reads ────────────────────────────────────────────────────────
 
     suspend fun isProVersion(): Boolean = isProFlow.first()
     suspend fun isRunInBackground(): Boolean = runInBackgroundFlow.first()
+
     suspend fun isOnboardingComplete(): Boolean =
         context.dataStore.data.first()[Keys.ONBOARDING_COMPLETE] ?: false
 
@@ -79,22 +90,31 @@ class ConfigRepository(private val context: Context) {
         return profiles.firstOrNull { it.id == id } ?: profiles.firstOrNull()
     }
 
-    suspend fun getProfiles(): List<Profile> {
-        val json = context.dataStore.data.first()[Keys.PROFILES_JSON]
-        return if (json.isNullOrEmpty()) {
-            listOf(defaultProfile())
-        } else {
-            runCatching { Json.decodeFromString<List<Profile>>(json) }
-                .getOrDefault(listOf(defaultProfile()))
-        }
-    }
+    // Delegates to profilesFlow so both stay in sync
+    suspend fun getProfiles(): List<Profile> = profilesFlow.first()
 
-    // ADDED: Missing Reads for Managers
     suspend fun getLastSummaryNotificationMs(): Long =
         context.dataStore.data.first()[Keys.LAST_SUMMARY_NOTIF_MS] ?: 0L
 
     suspend fun getAdaptiveThresholdStateJson(): String? =
         context.dataStore.data.first()[Keys.ADAPTIVE_THRESHOLD_JSON]
+
+    val homeLat: Double
+        get() = runBlocking {
+            context.dataStore.data.first()[Keys.HOME_LAT] ?: 37.422
+        }
+
+    val homeLng: Double
+        get() = runBlocking {
+            context.dataStore.data.first()[Keys.HOME_LNG] ?: -122.084
+        }
+
+    suspend fun setHomeLocation(lat: Double, lng: Double) {
+        context.dataStore.edit {
+            it[Keys.HOME_LAT] = lat
+            it[Keys.HOME_LNG] = lng
+        }
+    }
 
     // ─── Writes ───────────────────────────────────────────────────────────────
 
@@ -145,7 +165,11 @@ class ConfigRepository(private val context: Context) {
         context.dataStore.edit { it[Keys.PROFILES_JSON] = Json.encodeToString(profiles) }
     }
 
-    // ADDED: Missing Writes for Managers
+    suspend fun deleteProfile(profileId: Long) {
+        val profiles = getProfiles().filter { it.id != profileId }
+        context.dataStore.edit { it[Keys.PROFILES_JSON] = Json.encodeToString(profiles) }
+    }
+
     suspend fun setLastSummaryNotificationMs(timeMs: Long) {
         context.dataStore.edit { it[Keys.LAST_SUMMARY_NOTIF_MS] = timeMs }
     }
@@ -157,13 +181,16 @@ class ConfigRepository(private val context: Context) {
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private fun defaultProfile() = Profile(
-        id = 1L,
-        name = "Default",
-        startHour = 8,
-        endHour = 22,
-        alertThresholdMinutes = 5
-        // TODO: Fill in the missing required parameters (like emoji, schedule, parentId, etc.)
-        // to exactly match the constructor of your main Profile.kt data class!
+        id                    = 1L,
+        name                  = "Default",
+        emoji                 = "🧠",
+        parentId              = null,
+        startHour             = 8,
+        endHour               = 22,
+        alertThresholdMinutes = 5,
+        schedule              = ProfileSchedule.DaysOfWeek(setOf(1, 2, 3, 4, 5, 6, 7)),
+        excludedAppOverrides  = null,
+        isManuallyActive      = false
     )
 
     private inline fun <reified T> String.deserializeList(): List<T> =

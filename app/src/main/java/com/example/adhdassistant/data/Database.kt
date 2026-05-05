@@ -25,7 +25,8 @@ data class ActivityEvent(
     val timestamp: Long,
     val appPackage: String,
     val durationMs: Long,
-    val actionTaken: String
+    val actionTaken: String,
+    val groundingChoice: String? = null
 ) {
     fun parsedClause() =
         com.example.adhdassistant.domain.TriggerClause.fromJson(triggerClause)
@@ -62,6 +63,16 @@ interface ActivityEventDao {
         )
     """)
     suspend fun resolveLastEvent(triggeringProfileId: Long, action: String)
+
+    @Query("""
+        UPDATE activity_events 
+        SET groundingChoice = :choice 
+        WHERE id = (
+            SELECT MAX(id) FROM activity_events 
+            WHERE triggeringProfileId = :triggeringProfileId 
+        )
+    """)
+    suspend fun updateLastEventGroundingChoice(triggeringProfileId: Long, choice: String)
 
     @Query("""
         SELECT * FROM activity_events 
@@ -126,7 +137,7 @@ interface ActivityEventDao {
 // ─── Database ─────────────────────────────────────────────────────────────────
 
 // FIXED: Set exportSchema = false to resolve the KSP missing directory error
-@Database(entities = [ActivityEvent::class], version = 2, exportSchema = false)
+@Database(entities = [ActivityEvent::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun activityEventDao(): ActivityEventDao
@@ -141,7 +152,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "adhd_assistant_db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { INSTANCE = it }
             }
@@ -160,6 +171,12 @@ abstract class AppDatabase : RoomDatabase() {
                         triggeringProfileId = profileId
                     WHERE profileId IS NOT NULL AND profileId != 0
                 """)
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activity_events ADD COLUMN groundingChoice TEXT")
             }
         }
     }

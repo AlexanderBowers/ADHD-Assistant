@@ -89,7 +89,7 @@ class ExcludedAppsActivity : AppCompatActivity() {
 
             binding.progressBar.visibility = View.GONE
             binding.recyclerViewApps.visibility = View.VISIBLE
-            binding.tvAppCount.text = "${apps.size} apps found"
+            binding.tvAppCount.text = getString(R.string.excluded_count, apps.size)
             adapter.submitList(apps.toList())
         }
     }
@@ -161,7 +161,7 @@ class ExcludedAppsActivity : AppCompatActivity() {
         private val onCheckedChanged: (AppItem, Boolean) -> Unit
     ) : ListAdapter<AppItem, AppAdapter.ViewHolder>(DIFF_CALLBACK) {
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val tvName: TextView = view.findViewById(R.id.tvAppName)
             val tvPackage: TextView = view.findViewById(R.id.tvPackageName)
             val cbExclude: CheckBox = view.findViewById(R.id.cbExclude)
@@ -196,10 +196,10 @@ class ExcludedAppsActivity : AppCompatActivity() {
 
         companion object {
             val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppItem>() {
-                override fun areItemsSame(old: AppItem, new: AppItem) =
-                    old.packageName == new.packageName
-                override fun areContentsSame(old: AppItem, new: AppItem) =
-                    old == new
+                override fun areItemsTheSame(oldItem: AppItem, newItem: AppItem) =
+                    oldItem.packageName == newItem.packageName
+                override fun areContentsTheSame(oldItem: AppItem, newItem: AppItem) =
+                    oldItem == newItem
             }
         }
     }

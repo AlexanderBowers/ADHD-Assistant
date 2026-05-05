@@ -179,4 +179,13 @@
     <string name="cd_app_icon_excluded">Ícono de app</string>
     <string name="btn_remove_app">Quitar</string>
     <string name="excluded_empty">Sin apps agregadas aún. Toca + para agregar una.</string>
+
+    <!-- Geovallas y permisos -->
+    <string name="msg_location_required">Se necesita el permiso de ubicación para saber cuándo estás en casa.</string>
+    <string name="msg_tracker_active">¡Rastreador activo! Avisaremos cuando estés en casa.</string>
+    <string name="msg_geofence_failed">No se pudo configurar el límite de casa: %1$s</string>
+    <string name="dialog_usage_title">Un aviso rápido</string>
+    <string name="dialog_usage_message">Para saber qué app estás usando y ayudarte a mantener el enfoque, necesito \"Acceso de uso\". Tus datos nunca salen de este dispositivo.</string>
+    <string name="btn_grant">Dar acceso</string>
+    <string name="btn_cancel">Ahora no</string>
 </resources>

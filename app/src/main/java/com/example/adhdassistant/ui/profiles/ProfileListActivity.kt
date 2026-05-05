@@ -2,37 +2,37 @@ package com.example.adhdassistant.ui.profiles
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.*
-import android.widget.TextView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.adhdassistant.R
 import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.config.Profile
 import com.example.adhdassistant.config.ProfileSchedule
 import com.example.adhdassistant.databinding.ActivityProfileListBinding
 import com.example.adhdassistant.databinding.ItemProfileBinding
-import com.example.adhdassistant.domain.ProfileConflict
-import com.example.adhdassistant.domain.ProfileConflictDetector
-import com.google.android.material.chip.Chip
+import com.example.adhdassistant.domain.ProfileError
+import com.example.adhdassistant.domain.ProfileResolver
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 /**
- * Lists all profiles with toggle switches.
+ * Lists all routines (profiles) with toggle switches.
  *
- * Key behaviour:
- *  - Toggling a profile ON runs conflict detection immediately.
- *  - If a conflict is found, a dialog explains which profiles clash and how
- *    the service will resolve it, then asks the user to confirm.
- *  - If the user confirms, both profiles stay active and the conflict is noted
- *    with a warning chip on each card.
- *  - Scheduled profiles show "Auto" instead of a toggle (they activate by
- *    schedule, not by user tap). Manual profiles show a toggle.
+ * Scheduling vs manual:
+ *   - Scheduled profiles (DaysOfWeek, TimedDays) show an "Auto" label — they
+ *     activate on their own and cannot be manually toggled.
+ *   - Manual profiles show a toggle switch.
+ *
+ * Structural errors (circular inheritance, missing parent) are surfaced with
+ * a warning chip on the card. Overlapping hours/days is NOT an error — the
+ * merger handles that gracefully.
  */
 class ProfileListActivity : AppCompatActivity() {
 
@@ -49,13 +49,13 @@ class ProfileListActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Profiles"
+        supportActionBar?.title = "Routines"
 
         configRepository = ConfigRepository(applicationContext)
 
         adapter = ProfileAdapter(
-            onToggle = { profile, isOn -> handleToggle(profile, isOn) },
-            onEdit = { profile -> openEditProfile(profile) },
+            onToggle = { profile, isOn -> applyToggle(profile, isOn) },
+            onEdit   = { profile -> openEditProfile(profile) },
             onDelete = { profile -> confirmDelete(profile) }
         )
 
@@ -74,64 +74,58 @@ class ProfileListActivity : AppCompatActivity() {
             configRepository.profilesFlow.collectLatest { stored ->
                 profiles.clear()
                 profiles.addAll(stored)
-                val activeProfiles = ProfileConflictDetector.resolveCurrentlyActive(profiles)
-                val conflicts = ProfileConflictDetector.detect(activeProfiles)
-                adapter.submitProfiles(profiles.toList(), conflicts)
+
+                val currentDow  = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+                val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                val activeNow   = ProfileResolver
+                    .resolveCurrentlyActive(profiles, currentDow, currentHour)
+                    .map { it.id }
+                    .toSet()
+
+                // Structural validation — flag broken profiles (circular ref, missing parent)
+                val errors = ProfileResolver.validate(profiles)
+                val errorIds = errors.mapNotNull { error ->
+                    when (error) {
+                        is ProfileError.CircularInheritance -> null // can't map to a single id
+                        is ProfileError.MissingParent       -> null
+                        is ProfileError.IncompleteRoot      -> null
+                    }
+                }.toSet()
+
+                // Build a set of profile IDs that have any validation error
+                val brokenIds = buildSet<Long> {
+                    errors.forEach { error ->
+                        when (error) {
+                            is ProfileError.IncompleteRoot -> {
+                                profiles.firstOrNull { it.name == error.profileName }
+                                    ?.id?.let { add(it) }
+                            }
+                            is ProfileError.MissingParent -> {
+                                profiles.firstOrNull { it.name == error.profileName }
+                                    ?.id?.let { add(it) }
+                            }
+                            is ProfileError.CircularInheritance -> {
+                                // Mark all profiles whose names appear in the cycle path
+                                val cycleNames = error.cyclePath.split(" → ")
+                                profiles.filter { it.name in cycleNames }
+                                    .forEach { add(it.id) }
+                            }
+                        }
+                    }
+                }
+
+                binding.tvEmpty.visibility =
+                    if (profiles.isEmpty()) View.VISIBLE else View.GONE
+
+                adapter.submitProfiles(profiles.toList(), activeNow, brokenIds)
             }
-        }
-    }
-
-    private fun handleToggle(profile: Profile, isOn: Boolean) {
-        if (profile.schedule !is ProfileSchedule.Manual) return  // Scheduled profiles can't be manually toggled
-
-        val proposedActive = if (isOn) {
-            ProfileConflictDetector.resolveCurrentlyActive(profiles)
-                .toMutableList().also { it.add(profile) }
-        } else {
-            ProfileConflictDetector.resolveCurrentlyActive(profiles)
-                .filter { it.id != profile.id }
-        }
-
-        val conflicts = ProfileConflictDetector.detect(proposedActive)
-
-        if (isOn && conflicts.isNotEmpty()) {
-            // Show conflict dialog — user can still proceed if they want
-            showConflictDialog(
-                incomingProfile = profile,
-                conflicts = conflicts,
-                onConfirm = { applyToggle(profile, true) },
-                onCancel = { adapter.revertToggle(profile.id) }
-            )
-        } else {
-            applyToggle(profile, isOn)
         }
     }
 
     private fun applyToggle(profile: Profile, isOn: Boolean) {
         lifecycleScope.launch {
-            val updated = profile.copy(isManuallyActive = isOn)
-            configRepository.saveProfile(updated)
+            configRepository.saveProfile(profile.copy(isManuallyActive = isOn))
         }
-    }
-
-    private fun showConflictDialog(
-        incomingProfile: Profile,
-        conflicts: List<ProfileConflict>,
-        onConfirm: () -> Unit,
-        onCancel: () -> Unit
-    ) {
-        val conflictSummary = conflicts.joinToString("\n\n") { it.describe() }
-
-        MaterialAlertDialogBuilder(this)
-            .setTitle("⚠️ Profile Overlap Detected")
-            .setMessage(
-                "\"${incomingProfile.name}\" overlaps with another active profile:\n\n" +
-                        "$conflictSummary\n\n" +
-                        "You can still enable it — the strictest settings will apply during the overlap."
-            )
-            .setPositiveButton("Enable Anyway") { _, _ -> onConfirm() }
-            .setNegativeButton("Cancel") { _, _ -> onCancel() }
-            .show()
     }
 
     private fun openEditProfile(profile: Profile) {
@@ -141,13 +135,25 @@ class ProfileListActivity : AppCompatActivity() {
     }
 
     private fun confirmDelete(profile: Profile) {
+        val hasChildren = profiles.any { it.parentId == profile.id }
+        val message = if (hasChildren) {
+            "\"${profile.name}\" has child routines that inherit from it. " +
+                    "They will lose their parent and need to be updated. This cannot be undone."
+        } else {
+            "This cannot be undone."
+        }
+
         MaterialAlertDialogBuilder(this)
-            .setTitle("Delete \"${profile.name}\"?")
-            .setMessage("This cannot be undone.")
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle("Remove \"${profile.name}\"?")
+            .setMessage(message)
+            .setPositiveButton("Remove") { _, _ ->
                 lifecycleScope.launch {
                     configRepository.deleteProfile(profile.id)
-                    Snackbar.make(binding.root, "\"${profile.name}\" deleted", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(
+                        binding.root,
+                        "\"${profile.name}\" removed",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -163,20 +169,25 @@ class ProfileListActivity : AppCompatActivity() {
 
     class ProfileAdapter(
         private val onToggle: (Profile, Boolean) -> Unit,
-        private val onEdit: (Profile) -> Unit,
+        private val onEdit:   (Profile) -> Unit,
         private val onDelete: (Profile) -> Unit
     ) : RecyclerView.Adapter<ProfileAdapter.ProfileViewHolder>() {
 
-        private var profiles = listOf<Profile>()
-        private var conflicts = listOf<ProfileConflict>()
+        private var profiles  = listOf<Profile>()
+        private var activeIds = setOf<Long>()
+        private var brokenIds = setOf<Long>()
 
-        fun submitProfiles(newProfiles: List<Profile>, newConflicts: List<ProfileConflict>) {
-            profiles = newProfiles
-            conflicts = newConflicts
+        fun submitProfiles(
+            newProfiles:  List<Profile>,
+            newActiveIds: Set<Long>,
+            newBrokenIds: Set<Long>
+        ) {
+            profiles  = newProfiles
+            activeIds = newActiveIds
+            brokenIds = newBrokenIds
             notifyDataSetChanged()
         }
 
-        /** Called when user cancels a conflict dialog — reverts the switch UI state. */
         fun revertToggle(profileId: Long) {
             val index = profiles.indexOfFirst { it.id == profileId }
             if (index >= 0) notifyItemChanged(index)
@@ -186,54 +197,97 @@ class ProfileListActivity : AppCompatActivity() {
             RecyclerView.ViewHolder(binding.root)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProfileViewHolder {
-            val binding = ItemProfileBinding.inflate(
+            val b = ItemProfileBinding.inflate(
                 LayoutInflater.from(parent.context), parent, false
             )
-            return ProfileViewHolder(binding)
+            return ProfileViewHolder(b)
         }
 
         override fun onBindViewHolder(holder: ProfileViewHolder, position: Int) {
             val profile = profiles[position]
             val b = holder.binding
 
-            b.tvEmoji.text = profile.emoji
+            // ── Identity ──────────────────────────────────────────────────────
+            b.tvEmoji.text       = profile.emoji
             b.tvProfileName.text = profile.name
-            b.tvScheduleSummary.text = profile.scheduleSummary()
+            b.tvScheduleSummary.text = profile.listSummary()
 
-            // Show conflict warning chip if this profile is involved in any conflict
-            val hasConflict = conflicts.any {
-                it.profileA.id == profile.id || it.profileB.id == profile.id
+            // ── Active now chip ───────────────────────────────────────────────
+            b.chipActive.visibility =
+                if (profile.id in activeIds) View.VISIBLE else View.GONE
+
+            // ── Inherits from chip ────────────────────────────────────────────
+            val parentName = profiles.firstOrNull { it.id == profile.parentId }?.name
+            if (parentName != null) {
+                b.chipInherits.text       = "Inherits from $parentName"
+                b.chipInherits.visibility = View.VISIBLE
+            } else {
+                b.chipInherits.visibility = View.GONE
             }
-            b.chipConflict.visibility = if (hasConflict) View.VISIBLE else View.GONE
 
-            // Show "Active now" badge if scheduled and currently active
-            val isActiveNow = ProfileConflictDetector
-                .resolveCurrentlyActive(profiles)
-                .any { it.id == profile.id }
-            b.chipActive.visibility = if (isActiveNow) View.VISIBLE else View.GONE
+            // ── Error chip ────────────────────────────────────────────────────
+            b.chipError.visibility =
+                if (profile.id in brokenIds) View.VISIBLE else View.GONE
 
-            // Manual profiles get a toggle; scheduled profiles show "Auto"
+            // ── Toggle vs Auto label ──────────────────────────────────────────
             when (profile.schedule) {
                 is ProfileSchedule.Manual -> {
                     b.switchActive.visibility = View.VISIBLE
-                    b.tvAutoLabel.visibility = View.GONE
-                    // Detach listener before setting value to avoid phantom callbacks
+                    b.tvAutoLabel.visibility  = View.GONE
                     b.switchActive.setOnCheckedChangeListener(null)
-                    b.switchActive.isChecked = profile.isManuallyActive
+                    b.switchActive.isChecked  = profile.isManuallyActive
                     b.switchActive.setOnCheckedChangeListener { _, isChecked ->
                         onToggle(profile, isChecked)
                     }
                 }
                 else -> {
                     b.switchActive.visibility = View.GONE
-                    b.tvAutoLabel.visibility = View.VISIBLE
+                    b.tvAutoLabel.visibility  = View.VISIBLE
                 }
             }
 
-            b.btnEdit.setOnClickListener { onEdit(profile) }
+            b.btnEdit.setOnClickListener   { onEdit(profile) }
             b.btnDelete.setOnClickListener { onDelete(profile) }
         }
 
         override fun getItemCount() = profiles.size
     }
+}
+
+// ─── Extension: display summary on raw Profile ────────────────────────────────
+
+/**
+ * A lightweight summary for the list card that handles nullable fields gracefully.
+ * Child profiles show "Inherits" for any field they haven't overridden.
+ */
+private fun Profile.listSummary(): String {
+    val scheduleStr = when (val s = schedule) {
+        is ProfileSchedule.Manual     -> "Manual"
+        is ProfileSchedule.DaysOfWeek -> formatDays(s.days)
+        is ProfileSchedule.TimedDays  -> "${formatDays(s.days)} from ${fmtHour(s.activateHour)}"
+        null                           -> "Inherits schedule"
+    }
+    val timeStr = if (startHour != null && endHour != null) {
+        "${fmtHour(startHour)}–${fmtHour(endHour)}"
+    } else "Inherits hours"
+
+    val thresholdStr = if (alertThresholdMinutes != null) {
+        "${alertThresholdMinutes}min"
+    } else "Inherits threshold"
+
+    return "$scheduleStr · $timeStr · $thresholdStr"
+}
+
+private fun formatDays(days: Set<Int>): String = when (days.sorted().toSet()) {
+    setOf(2, 3, 4, 5, 6)       -> "Mon–Fri"
+    setOf(1, 7)                 -> "Weekends"
+    setOf(1, 2, 3, 4, 5, 6, 7) -> "Every day"
+    else -> days.sorted().joinToString(", ") {
+        listOf("", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").getOrElse(it) { "?" }
+    }
+}
+
+private fun fmtHour(h: Int): String {
+    val hh = h % 12
+    return "${if (hh == 0) 12 else hh}${if (h < 12) "am" else "pm"}"
 }

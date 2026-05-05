@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Top row: emoji · name · active badge · inherit chip · toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvEmoji"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:textSize="28sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvProfileName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <!-- Badge row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- "Active now" — shown for any currently-active profile -->
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipActive"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Active now ✓"
+                        android:textSize="11sp"
+                        android:visibility="gone"
+                        app:chipBackgroundColor="@color/secondary_container"
+                        app:chipMinHeight="24dp" />
+
+                    <!-- "Inherits from X" — shown for child profiles -->
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipInherits"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textSize="11sp"
+                        android:visibility="gone"
+                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                        app:chipMinHeight="24dp" />
+
+                    <!-- Structural error (circular ref / missing parent) -->
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipError"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="⚠ Setup needed"
+                        android:textSize="11sp"
+                        android:visibility="gone"
+                        app:chipBackgroundColor="@color/error_container"
+                        app:chipMinHeight="24dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Manual profiles: on/off toggle -->
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <!-- Scheduled profiles: "Auto" label instead of toggle -->
+            <TextView
+                android:id="@+id/tvAutoLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Auto"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Schedule / time summary -->
+        <TextView
+            android:id="@+id/tvScheduleSummary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <!-- Bottom row: Edit · Delete -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEdit"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="Edit" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDelete"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="Delete"
+                android:textColor="?attr/colorError" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

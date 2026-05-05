@@ -133,13 +133,13 @@ class SettingsActivity : AppCompatActivity() {
             billingManager.billingState.collectLatest { state ->
                 when (state) {
                     is BillingManager.BillingState.PurchaseSuccess -> {
-                        Toast.makeText(this@SettingsActivity, getString(R.string.billing_purchase_success), Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@SettingsActivity, getString(R.string.pro_success), Toast.LENGTH_LONG).show()
                     }
                     is BillingManager.BillingState.PurchaseError -> {
-                        Toast.makeText(this@SettingsActivity, getString(R.string.billing_purchase_failed), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@SettingsActivity, getString(R.string.pro_failed), Toast.LENGTH_SHORT).show()
                     }
                     is BillingManager.BillingState.AlreadyOwned -> {
-                        Toast.makeText(this@SettingsActivity, getString(R.string.billing_restore_success), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@SettingsActivity, getString(R.string.pro_restored), Toast.LENGTH_SHORT).show()
                     }
                     is BillingManager.BillingState.PurchaseCancelled -> {
                         // User cancelled — no message needed
@@ -159,7 +159,7 @@ class SettingsActivity : AppCompatActivity() {
             val price = billingManager.getFormattedPrice()
             binding.btnUpgradePro.text = if (price != null)
                 "Upgrade to Pro — $price"
-            else getString(R.string.settings_pro_upgrade)
+            else getString(R.string.settings_upgrade_default)
             binding.btnUpgradePro.isEnabled = true
             binding.btnRestorePurchase.isEnabled = true
         }

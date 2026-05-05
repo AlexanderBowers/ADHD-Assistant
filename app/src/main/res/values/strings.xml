@@ -107,6 +107,8 @@
     <string name="routines_conflict_title">These routines overlap 👀</string>
     <string name="routines_conflict_ok">Got it, keep both active</string>
     <string name="routines_conflict_cancel">Never mind</string>
+    <string name="routines_edit">Edit</string>
+    <string name="routines_delete">Delete</string>
 
     <!-- ── Settings ───────────────────────────────────────────────── -->
     <string name="settings_title">Settings</string>
@@ -178,6 +180,7 @@
     <string name="excluded_empty">No apps added yet. Tap + to add one.</string>
 
     <!-- ── Accessibility ──────────────────────────────────────────── -->
+    <string name="cd_check_excluded">Mark app as intentional — won\'t trigger check-ins</string>
     <string name="cd_exclude_toggle">Mark app as intentional — won\'t trigger check-ins</string>
     <string name="cd_drag_handle">Drag to reorder intention</string>
     <string name="cd_profile_toggle">Toggle routine active</string>
@@ -187,4 +190,13 @@
     <string name="cd_add_excluded_app_btn">Add app to intentional list</string>
     <string name="cd_app_icon_excluded">App icon</string>
     <string name="btn_remove_app">Remove</string>
+
+    <!-- ── Geofencing & Permissions ────────────────────────────────── -->
+    <string name="msg_location_required">Location permission is needed to know when you\'re home.</string>
+    <string name="msg_tracker_active">Tracker active! We\'ll check in when you\'re at home.</string>
+    <string name="msg_geofence_failed">Couldn\'t set up the home boundary: %1$s</string>
+    <string name="dialog_usage_title">Quick heads-up</string>
+    <string name="dialog_usage_message">To know which app you\'re using and help you stay mindful, I need \"Usage Access\". Your data never leaves this device.</string>
+    <string name="btn_grant">Grant access</string>
+    <string name="btn_cancel">Not now</string>
 </resources>
