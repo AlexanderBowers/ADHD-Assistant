@@ -1,21 +1,21 @@
 package com.example.adhdassistant.domain
 
-import com.example.adhdassistant.config.Profile
-import com.example.adhdassistant.config.ProfileSchedule
+import com.example.adhdassistant.config.Routine
+import com.example.adhdassistant.config.RoutineSchedule
 import org.junit.Test
 import org.junit.Assert.*
 
-class ProfileResolverTest {
+class RoutineResolverTest {
 
-    // A fully-specified root profile — ProfileResolver requires these four fields on the root.
-    private fun rootProfile(
+    // A fully-specified root routine — RoutineResolver requires these four fields on the root.
+    private fun rootRoutine(
         id: Long = 1L,
         name: String = "Default",
         startHour: Int = 8,
         endHour: Int = 22,
         alertThresholdMinutes: Int = 5,
-        schedule: ProfileSchedule = ProfileSchedule.DaysOfWeek(setOf(1, 2, 3, 4, 5, 6, 7))
-    ) = Profile(
+        schedule: RoutineSchedule = RoutineSchedule.DaysOfWeek(setOf(1, 2, 3, 4, 5, 6, 7))
+    ) = Routine(
         id                    = id,
         name                  = name,
         startHour             = startHour,
@@ -24,54 +24,54 @@ class ProfileResolverTest {
         schedule              = schedule
     )
 
-    // A child profile that inherits from a root — only fields to override need to be set.
-    private fun childProfile(
+    // A child routine that inherits from a root — only fields to override need to be set.
+    private fun childRoutine(
         id: Long,
         name: String,
         parentId: Long,
         alertThresholdMinutes: Int? = null
-    ) = Profile(
+    ) = Routine(
         id                    = id,
         name                  = name,
         parentId              = parentId,
         alertThresholdMinutes = alertThresholdMinutes
     )
 
-    // ─── ProfileResolver tests ─────────────────────────────────────────────────
+    // ─── RoutineResolver tests ─────────────────────────────────────────────────
 
     @Test
-    fun `resolves root profile successfully`() {
-        val profile = rootProfile(id = 1L, name = "Default")
-        val result = ProfileResolver.resolve(profile, listOf(profile))
+    fun `resolves root routine successfully`() {
+        val routine = rootRoutine(id = 1L, name = "Default")
+        val result = RoutineResolver.resolve(routine, listOf(routine))
         assertNotNull(result)
         assertEquals("Default", result!!.name)
     }
 
     @Test
-    fun `resolved profile carries correct threshold`() {
-        val profile = rootProfile(id = 1L, alertThresholdMinutes = 10)
-        val result = ProfileResolver.resolve(profile, listOf(profile))
+    fun `resolved routine carries correct threshold`() {
+        val routine = rootRoutine(id = 1L, alertThresholdMinutes = 10)
+        val result = RoutineResolver.resolve(routine, listOf(routine))
         assertNotNull(result)
         assertEquals(10, result!!.alertThresholdMinutes)
     }
 
     @Test
     fun `returns null for incomplete root missing required fields`() {
-        // Profile without startHour/endHour/alertThresholdMinutes/schedule is incomplete
-        val incomplete = Profile(id = 1L, name = "Incomplete")
-        val errors = mutableListOf<ProfileError>()
-        val result = ProfileResolver.resolve(incomplete, listOf(incomplete), errors)
+        // Routine without startHour/endHour/alertThresholdMinutes/schedule is incomplete
+        val incomplete = Routine(id = 1L, name = "Incomplete")
+        val errors = mutableListOf<RoutineError>()
+        val result = RoutineResolver.resolve(incomplete, listOf(incomplete), errors)
         assertNull(result)
-        assertTrue("Expected IncompleteRoot error", errors.any { it is ProfileError.IncompleteRoot })
+        assertTrue("Expected IncompleteRoot error", errors.any { it is RoutineError.IncompleteRoot })
     }
 
     @Test
     fun `child inherits fields from root`() {
-        val root  = rootProfile(id = 1L, name = "Root", alertThresholdMinutes = 5)
-        val child = childProfile(id = 2L, name = "Child", parentId = 1L)
-        val allProfiles = listOf(root, child)
+        val root  = rootRoutine(id = 1L, name = "Root", alertThresholdMinutes = 5)
+        val child = childRoutine(id = 2L, name = "Child", parentId = 1L)
+        val allRoutines = listOf(root, child)
 
-        val result = ProfileResolver.resolve(child, allProfiles)
+        val result = RoutineResolver.resolve(child, allRoutines)
         assertNotNull(result)
         // Child didn't override threshold — should inherit root's value
         assertEquals(5, result!!.alertThresholdMinutes)
@@ -80,70 +80,70 @@ class ProfileResolverTest {
 
     @Test
     fun `child threshold overrides root threshold`() {
-        val root  = rootProfile(id = 1L, alertThresholdMinutes = 5)
-        val child = childProfile(id = 2L, name = "Focused Child", parentId = 1L, alertThresholdMinutes = 2)
-        val allProfiles = listOf(root, child)
+        val root  = rootRoutine(id = 1L, alertThresholdMinutes = 5)
+        val child = childRoutine(id = 2L, name = "Focused Child", parentId = 1L, alertThresholdMinutes = 2)
+        val allRoutines = listOf(root, child)
 
-        val result = ProfileResolver.resolve(child, allProfiles)
+        val result = RoutineResolver.resolve(child, allRoutines)
         assertNotNull(result)
         assertEquals(2, result!!.alertThresholdMinutes)
     }
 
     @Test
     fun `returns null and error when parent is missing`() {
-        val orphan = childProfile(id = 2L, name = "Orphan", parentId = 99L)
-        val errors = mutableListOf<ProfileError>()
-        val result = ProfileResolver.resolve(orphan, listOf(orphan), errors)
+        val orphan = childRoutine(id = 2L, name = "Orphan", parentId = 99L)
+        val errors = mutableListOf<RoutineError>()
+        val result = RoutineResolver.resolve(orphan, listOf(orphan), errors)
         assertNull(result)
-        assertTrue("Expected MissingParent error", errors.any { it is ProfileError.MissingParent })
+        assertTrue("Expected MissingParent error", errors.any { it is RoutineError.MissingParent })
     }
 
     @Test
     fun `validate detects circular inheritance`() {
-        val a = Profile(id = 1L, name = "A", parentId = 2L)
-        val b = Profile(id = 2L, name = "B", parentId = 1L)
-        val errors = ProfileResolver.validate(listOf(a, b))
-        assertTrue("Expected CircularInheritance error", errors.any { it is ProfileError.CircularInheritance })
+        val a = Routine(id = 1L, name = "A", parentId = 2L)
+        val b = Routine(id = 2L, name = "B", parentId = 1L)
+        val errors = RoutineResolver.validate(listOf(a, b))
+        assertTrue("Expected CircularInheritance error", errors.any { it is RoutineError.CircularInheritance })
     }
 
-    // ─── ProfileMerger tests ───────────────────────────────────────────────────
+    // ─── RoutineMerger tests ───────────────────────────────────────────────────
 
     @Test
     fun `merge returns null for empty list`() {
-        val result = ProfileMerger.merge(emptyList())
+        val result = RoutineMerger.merge(emptyList())
         assertNull(result)
     }
 
     @Test
-    fun `merge single profile produces correct merged profile`() {
-        val profile = rootProfile(id = 1L, name = "Default", alertThresholdMinutes = 5)
-        val resolved = ProfileResolver.resolve(profile, listOf(profile))!!
-        val merged = ProfileMerger.merge(listOf(resolved))
+    fun `merge single routine produces correct merged routine`() {
+        val routine = rootRoutine(id = 1L, name = "Default", alertThresholdMinutes = 5)
+        val resolved = RoutineResolver.resolve(routine, listOf(routine))!!
+        val merged = RoutineMerger.merge(listOf(resolved))
         assertNotNull(merged)
-        assertEquals(listOf("Default"), merged!!.activeProfileNames)
+        assertEquals(listOf("Default"), merged!!.activeRoutineNames)
         assertEquals(5, merged.alertThresholdMinutes)
     }
 
     @Test
-    fun `merge uses minimum threshold across profiles`() {
-        val p1 = rootProfile(id = 1L, name = "Relaxed", alertThresholdMinutes = 15)
-        val p2 = rootProfile(id = 2L, name = "Strict",  alertThresholdMinutes = 3)
-        val allProfiles = listOf(p1, p2)
-        val resolved = allProfiles.mapNotNull { ProfileResolver.resolve(it, allProfiles) }
-        val merged = ProfileMerger.merge(resolved)
+    fun `merge uses minimum threshold across routines`() {
+        val p1 = rootRoutine(id = 1L, name = "Relaxed", alertThresholdMinutes = 15)
+        val p2 = rootRoutine(id = 2L, name = "Strict",  alertThresholdMinutes = 3)
+        val allRoutines = listOf(p1, p2)
+        val resolved = allRoutines.mapNotNull { RoutineResolver.resolve(it, allRoutines) }
+        val merged = RoutineMerger.merge(resolved)
         assertNotNull(merged)
         // Strictest (lowest) threshold wins
         assertEquals(3, merged!!.alertThresholdMinutes)
     }
 
     @Test
-    fun `merge combines profile names`() {
-        val p1 = rootProfile(id = 1L, name = "Work")
-        val p2 = rootProfile(id = 2L, name = "Evening")
-        val allProfiles = listOf(p1, p2)
-        val resolved = allProfiles.mapNotNull { ProfileResolver.resolve(it, allProfiles) }
-        val merged = ProfileMerger.merge(resolved)
+    fun `merge combines routine names`() {
+        val p1 = rootRoutine(id = 1L, name = "Work")
+        val p2 = rootRoutine(id = 2L, name = "Evening")
+        val allRoutines = listOf(p1, p2)
+        val resolved = allRoutines.mapNotNull { RoutineResolver.resolve(it, allRoutines) }
+        val merged = RoutineMerger.merge(resolved)
         assertNotNull(merged)
-        assertTrue(merged!!.activeProfileNames.containsAll(listOf("Work", "Evening")))
+        assertTrue(merged!!.activeRoutineNames.containsAll(listOf("Work", "Evening")))
     }
 }

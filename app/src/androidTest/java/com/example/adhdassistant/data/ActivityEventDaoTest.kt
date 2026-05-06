@@ -36,10 +36,10 @@ class ActivityEventDaoTest {
         durationMs: Long = 60_000L,
         timestamp: Long = System.currentTimeMillis()
     ) = ActivityEvent(
-        activeProfileIds   = "[1]",
-        activeProfileNames = "[\"Default\"]",
-        triggeringProfileId   = 1L,
-        triggeringProfileName = "Default",
+        activeRoutineIds   = "[1]",
+        activeRoutineNames = "[\"Default\"]",
+        triggeringRoutineId   = 1L,
+        triggeringRoutineName = "Default",
         triggerClause = "{\"type\":\"TimeThreshold\",\"minutes\":5}",
         timestamp  = timestamp,
         appPackage = appPackage,
@@ -72,7 +72,7 @@ class ActivityEventDaoTest {
     fun resolveLastEventUpdatesAction() = runBlocking {
         dao.insertEvent(makeEvent(actionTaken = "TRIGGERED"))
 
-        dao.resolveLastEvent(triggeringProfileId = 1L, action = "DISMISSED")
+        dao.resolveLastEvent(triggeringRoutineId = 1L, action = "DISMISSED")
 
         val events = dao.getAllEventsForWeek(0L).first()
         assertEquals(1, events.size)
@@ -98,7 +98,7 @@ class ActivityEventDaoTest {
     @Test
     fun groundingChoiceCanBeUpdated() = runBlocking {
         dao.insertEvent(makeEvent(actionTaken = "TRIGGERED"))
-        dao.updateLastEventGroundingChoice(triggeringProfileId = 1L, choice = "breathing")
+        dao.updateLastEventGroundingChoice(triggeringRoutineId = 1L, choice = "breathing")
 
         val events = dao.getAllEventsForWeek(0L).first()
         assertEquals("breathing", events[0].groundingChoice)

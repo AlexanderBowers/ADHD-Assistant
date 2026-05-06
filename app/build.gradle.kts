@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -66,6 +67,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.material3)
     // UI — Material 3
     implementation(libs.material)
     implementation(libs.constraintlayout)

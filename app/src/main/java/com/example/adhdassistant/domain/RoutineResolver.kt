@@ -5,16 +5,16 @@ import java.util.Calendar
 
 // ─── Errors ───────────────────────────────────────────────────────────────────
 
-sealed class ProfileError {
-    data class CircularInheritance(val cyclePath: String) : ProfileError()
-    data class MissingParent(val profileName: String, val missingParentId: Long) : ProfileError()
-    data class IncompleteRoot(val profileName: String, val missingFields: List<ProfileField>) : ProfileError()
+sealed class RoutineError {
+    data class CircularInheritance(val cyclePath: String) : RoutineError()
+    data class MissingParent(val routineName: String, val missingParentId: Long) : RoutineError()
+    data class IncompleteRoot(val routineName: String, val missingFields: List<RoutineField>) : RoutineError()
 }
 
 // ─── Resolver ─────────────────────────────────────────────────────────────────
 
 /**
- * Resolves a Profile through its full inheritance chain into a concrete ResolvedProfile.
+ * Resolves a Routine through its full inheritance chain into a concrete ResolvedRoutine.
  * Pure Kotlin — no Android dependencies, fully unit-testable.
  *
  * Field resolution (for all fields except excludedApps):
@@ -27,66 +27,66 @@ sealed class ProfileError {
  *   A level with null overrides passes the set through unchanged.
  *   This lets a child add apps, remove apps, do both, or leave the list alone.
  */
-object ProfileResolver {
+object RoutineResolver {
 
     // ─── Primary API ─────────────────────────────────────────────────────────
 
     fun resolve(
-        profile: Profile,
-        allProfiles: List<Profile>,
-        errors: MutableList<ProfileError> = mutableListOf()
-    ): ResolvedProfile? {
-        val chain = buildChain(profile, allProfiles, errors) ?: return null
+        routine: Routine,
+        allRoutines: List<Routine>,
+        errors: MutableList<RoutineError> = mutableListOf()
+    ): ResolvedRoutine? {
+        val chain = buildChain(routine, allRoutines, errors) ?: return null
         return applyChain(chain, errors)
     }
 
-    fun validate(allProfiles: List<Profile>): List<ProfileError> {
-        val errors = mutableListOf<ProfileError>()
-        for (profile in allProfiles) {
-            buildChain(profile, allProfiles, errors)
-            if (profile.isRoot) checkRoot(profile, errors)
+    fun validate(allRoutines: List<Routine>): List<RoutineError> {
+        val errors = mutableListOf<RoutineError>()
+        for (routine in allRoutines) {
+            buildChain(routine, allRoutines, errors)
+            if (routine.isRoot) checkRoot(routine, errors)
         }
         return errors
     }
 
     fun resolveCurrentlyActive(
-        allProfiles: List<Profile>,
+        allRoutines: List<Routine>,
         currentDayOfWeek: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK),
         currentHour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    ): List<Profile> = allProfiles.filter { isActiveNow(it, currentDayOfWeek, currentHour) }
+    ): List<Routine> = allRoutines.filter { isActiveNow(it, currentDayOfWeek, currentHour) }
 
-    fun childrenOf(parentId: Long, allProfiles: List<Profile>): List<Profile> =
-        allProfiles.filter { it.parentId == parentId }
+    fun childrenOf(parentId: Long, allRoutines: List<Routine>): List<Routine> =
+        allRoutines.filter { it.parentId == parentId }
 
-    fun ancestorsOf(profile: Profile, allProfiles: List<Profile>): List<Profile>? {
-        val errors = mutableListOf<ProfileError>()
-        return buildChain(profile, allProfiles, errors)?.dropLast(1)
+    fun ancestorsOf(routine: Routine, allRoutines: List<Routine>): List<Routine>? {
+        val errors = mutableListOf<RoutineError>()
+        return buildChain(routine, allRoutines, errors)?.dropLast(1)
     }
 
     // ─── Chain Building ───────────────────────────────────────────────────────
 
     private fun buildChain(
-        profile: Profile,
-        allProfiles: List<Profile>,
-        errors: MutableList<ProfileError>
-    ): List<Profile>? {
-        val chain = mutableListOf<Profile>()
+        routine: Routine,
+        allRoutines: List<Routine>,
+        errors: MutableList<RoutineError>
+    ): List<Routine>? {
+        val chain = mutableListOf<Routine>()
         val visited = mutableSetOf<Long>()
-        var current = profile
+        var current = routine
 
         while (true) {
             if (current.id in visited) {
                 val path = (chain.map { it.name } + current.name).joinToString(" → ")
-                errors.add(ProfileError.CircularInheritance(path))
+                errors.add(RoutineError.CircularInheritance(path))
                 return null
             }
             visited.add(current.id)
             chain.add(0, current)
 
             val parentId = current.parentId ?: break
-            val parent = allProfiles.firstOrNull { it.id == parentId }
+            val parent = allRoutines.firstOrNull { it.id == parentId }
             if (parent == null) {
-                errors.add(ProfileError.MissingParent(current.name, parentId))
+                errors.add(RoutineError.MissingParent(current.name, parentId))
                 return null
             }
             current = parent
@@ -97,15 +97,15 @@ object ProfileResolver {
     // ─── Chain Application ────────────────────────────────────────────────────
 
     private fun applyChain(
-        chain: List<Profile>,  // Root-first
-        errors: MutableList<ProfileError>
-    ): ResolvedProfile? {
+        chain: List<Routine>,  // Root-first
+        errors: MutableList<RoutineError>
+    ): ResolvedRoutine? {
         val root = chain.first()
 
         // Validate root completeness
         val missing = missingRootFields(root)
         if (missing.isNotEmpty()) {
-            errors.add(ProfileError.IncompleteRoot(root.name, missing))
+            errors.add(RoutineError.IncompleteRoot(root.name, missing))
             return null
         }
 
@@ -123,17 +123,17 @@ object ProfileResolver {
         var onOpenPromptPackages = emptySet<String>()
         root.onOpenPromptOverrides?.let { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
 
-        for (profile in chain.drop(1)) {
-            profile.startHour?.let              { startHour = it }
-            profile.endHour?.let                { endHour = it }
-            profile.alertThresholdMinutes?.let  { alertThresholdMinutes = it }
-            profile.schedule?.let               { schedule = it }
-            profile.excludedAppOverrides?.let   { excludedApps = applyDelta(excludedApps, it) }
-            profile.onOpenPromptOverrides?.let  { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
+        for (routine in chain.drop(1)) {
+            routine.startHour?.let              { startHour = it }
+            routine.endHour?.let                { endHour = it }
+            routine.alertThresholdMinutes?.let  { alertThresholdMinutes = it }
+            routine.schedule?.let               { schedule = it }
+            routine.excludedAppOverrides?.let   { excludedApps = applyDelta(excludedApps, it) }
+            routine.onOpenPromptOverrides?.let  { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
         }
 
         val leaf = chain.last()
-        return ResolvedProfile(
+        return ResolvedRoutine(
             id                    = leaf.id,
             name                  = leaf.name,
             emoji                 = leaf.emoji,
@@ -160,39 +160,39 @@ object ProfileResolver {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private fun checkRoot(root: Profile, errors: MutableList<ProfileError>) {
+    private fun checkRoot(root: Routine, errors: MutableList<RoutineError>) {
         val missing = missingRootFields(root)
-        if (missing.isNotEmpty()) errors.add(ProfileError.IncompleteRoot(root.name, missing))
+        if (missing.isNotEmpty()) errors.add(RoutineError.IncompleteRoot(root.name, missing))
     }
 
-    private fun missingRootFields(root: Profile): List<ProfileField> = buildList {
-        if (root.startHour == null)            add(ProfileField.START_HOUR)
-        if (root.endHour == null)              add(ProfileField.END_HOUR)
-        if (root.alertThresholdMinutes == null) add(ProfileField.THRESHOLD)
-        if (root.schedule == null)             add(ProfileField.SCHEDULE)
+    private fun missingRootFields(root: Routine): List<RoutineField> = buildList {
+        if (root.startHour == null)            add(RoutineField.START_HOUR)
+        if (root.endHour == null)              add(RoutineField.END_HOUR)
+        if (root.alertThresholdMinutes == null) add(RoutineField.THRESHOLD)
+        if (root.schedule == null)             add(RoutineField.SCHEDULE)
     }
 
-    private fun isActiveNow(profile: Profile, dow: Int, hour: Int): Boolean =
-        when (val s = profile.schedule ?: return false) {
-            is ProfileSchedule.Manual     -> profile.isManuallyActive
-            is ProfileSchedule.DaysOfWeek -> dow in s.days
-            is ProfileSchedule.TimedDays  -> dow in s.days && hour >= s.activateHour
+    private fun isActiveNow(routine: Routine, dow: Int, hour: Int): Boolean =
+        when (val s = routine.schedule ?: return false) {
+            is RoutineSchedule.Manual     -> routine.isManuallyActive
+            is RoutineSchedule.DaysOfWeek -> dow in s.days
+            is RoutineSchedule.TimedDays  -> dow in s.days && hour >= s.activateHour
         }
 }
 
 // ─── Merger ───────────────────────────────────────────────────────────────────
 
-object ProfileMerger {
+object RoutineMerger {
 
-    data class MergedProfile(
-        val activeProfileNames: List<String>,
+    data class MergedRoutine(
+        val activeRoutineNames: List<String>,
         val alertThresholdMinutes: Int,
         val excludedApps: Set<String>,
         val onOpenPromptPackages: Set<String>,
         val activeHourRanges: List<HourRange>
     ) {
         fun coversHour(hour: Int) = activeHourRanges.any { it.contains(hour) }
-        fun label() = activeProfileNames.joinToString(" + ")
+        fun label() = activeRoutineNames.joinToString(" + ")
     }
 
     data class HourRange(val start: Int, val end: Int) {
@@ -200,10 +200,10 @@ object ProfileMerger {
         else hour >= start || hour < end
     }
 
-    fun merge(resolved: List<ResolvedProfile>): MergedProfile? {
+    fun merge(resolved: List<ResolvedRoutine>): MergedRoutine? {
         if (resolved.isEmpty()) return null
-        return MergedProfile(
-            activeProfileNames    = resolved.map { it.name },
+        return MergedRoutine(
+            activeRoutineNames    = resolved.map { it.name },
             alertThresholdMinutes = resolved.minOf { it.alertThresholdMinutes },
             excludedApps          = resolved.flatMap { it.excludedApps }.toSet(),
             onOpenPromptPackages  = resolved.flatMap { it.onOpenPromptPackages }.toSet(),
@@ -212,14 +212,14 @@ object ProfileMerger {
     }
 
     fun resolveAndMerge(
-        allProfiles: List<Profile>,
+        allRoutines: List<Routine>,
         currentDayOfWeek: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK),
         currentHour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    ): MergedProfile? {
-        val errors = mutableListOf<ProfileError>()
-        val resolved = ProfileResolver
-            .resolveCurrentlyActive(allProfiles, currentDayOfWeek, currentHour)
-            .mapNotNull { ProfileResolver.resolve(it, allProfiles, errors) }
+    ): MergedRoutine? {
+        val errors = mutableListOf<RoutineError>()
+        val resolved = RoutineResolver
+            .resolveCurrentlyActive(allRoutines, currentDayOfWeek, currentHour)
+            .mapNotNull { RoutineResolver.resolve(it, allRoutines, errors) }
         return merge(resolved)
     }
 }

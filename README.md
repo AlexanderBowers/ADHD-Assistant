@@ -30,7 +30,7 @@ No ads. Ever. Free tier is genuinely useful. Optional $0.99 Pro upgrade for rout
 ```
 app/src/main/java/com/example/adhdassistant/
 ├── billing/          Google Play In-App Purchases
-├── config/           DataStore-based settings & profile models
+├── config/           DataStore-based settings & routine models
 ├── data/             Room database (event log)
 ├── domain/           Pure logic — resolver, merger, adaptive threshold
 ├── tracking/         Foreground service, boot receiver, session summary
@@ -39,7 +39,7 @@ app/src/main/java/com/example/adhdassistant/
     ├── excluded/     Intentional-apps list (Pro)
     ├── main/         Home screen
     ├── onboarding/   First-run flow
-    ├── profiles/     Routine management (Pro)
+    ├── routines/     Routine management (Pro)
     ├── settings/     Settings & billing
     └── stats/        Weekly patterns (Pro)
 ```
@@ -110,16 +110,16 @@ The app never requests camera, contacts, location, microphone, or any sensitive 
 |---|---|
 | `billing/BillingManager.kt` | Google Play Billing, purchase flow, Pro status |
 | `config/ConfigRepository.kt` | DataStore-based settings, all app preferences |
-| `config/Profile.kt` | Profile & ResolvedProfile models, presets, ExcludedAppOverrides |
+| `config/Routine.kt` | Routine & ResolvedRoutine models, presets, ExcludedAppOverrides |
 | `data/Database.kt` | Room database, ActivityEvent entity, DAOs, migration |
 | `domain/AdaptiveThresholdManager.kt` | Tracks "keep going" patterns, suggests threshold adjustments |
-| `domain/ProfileResolver.kt` | Inheritance chain resolution, profile merger |
+| `domain/RoutineResolver.kt` | Inheritance chain resolution, routine merger |
 | `domain/TriggerClause.kt` | Which rule fired an alert, with inheritance attribution |
 | `tracking/UsageTrackingService.kt` | Foreground service, 30s polling loop |
 | `tracking/SessionSummaryManager.kt` | Screen-off summary notification, re-alert level tracker |
 | `ui/alert/AlertActivity.kt` | Check-in screen — three language levels, grounding flow |
 | `ui/excluded/ExcludedAppsActivity.kt` | Intentional-apps list (Pro) |
-| `ui/profiles/ProfileListActivity.kt` | Routine management with conflict info (Pro) |
+| `ui/routines/RoutineListActivity.kt` | Routine management with conflict info (Pro) |
 | `ui/settings/SettingsActivity.kt` | Settings, Pro billing, background toggle |
 | `BootReceiver.kt` + `ChoreListActivity` (in `BootAndChores.kt`) | Boot restart, Intentions list |
 
@@ -136,7 +136,7 @@ The app never requests camera, contacts, location, microphone, or any sensitive 
 
 | File | Location | Purpose |
 |---|---|---|
-| `ProfileResolverTest.kt` | `src/test/` | 26 tests — inheritance, delta exclusions, merge |
+| `RoutineResolverTest.kt` | `src/test/` | 26 tests — inheritance, delta exclusions, merge |
 | `UsageEvaluatorTest.kt` | `src/test/` | 11 tests — timer logic, resets, exclusions |
 | `ChoreLogicTest.kt` | `src/test/` | Intention list ordering and mutation |
 | `ActivityEventDaoTest.kt` | `src/androidTest/` | Room DAO — requires emulator |

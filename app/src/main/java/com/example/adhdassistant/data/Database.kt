@@ -2,8 +2,6 @@ package com.example.adhdassistant.data
 
 import android.content.Context
 import androidx.room.*
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 
@@ -14,11 +12,11 @@ data class ActivityEvent(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    val activeProfileIds: String,
-    val activeProfileNames: String,
+    val activeRoutineIds: String,
+    val activeRoutineNames: String,
 
-    val triggeringProfileId: Long,
-    val triggeringProfileName: String,
+    val triggeringRoutineId: Long,
+    val triggeringRoutineName: String,
 
     val triggerClause: String,
 
@@ -34,16 +32,16 @@ data class ActivityEvent(
     fun triggerSummary(): String =
         parsedClause()?.describe() ?: triggerClause
 
-    fun activeProfileNameList(): List<String> = runCatching {
-        Json.decodeFromString<List<String>>(activeProfileNames)
-    }.getOrDefault(listOf(triggeringProfileName))
+    fun activeRoutineNameList(): List<String> = runCatching {
+        Json.decodeFromString<List<String>>(activeRoutineNames)
+    }.getOrDefault(listOf(triggeringRoutineName))
 }
 
 // ─── Query result types ───────────────────────────────────────────────────────
 
 data class ActionCount(val action: String, val count: Int)
 data class AppUsageStat(val appPackage: String, val totalAlerts: Int, val totalDurationMs: Long)
-data class ProfileTriggerStat(val triggeringProfileName: String, val triggerCount: Int)
+data class RoutineTriggerStat(val triggeringRoutineName: String, val triggerCount: Int)
 
 // ─── DAO ──────────────────────────────────────────────────────────────────────
 
@@ -58,73 +56,72 @@ interface ActivityEventDao {
         SET actionTaken = :action 
         WHERE id = (
             SELECT MAX(id) FROM activity_events 
-            WHERE triggeringProfileId = :triggeringProfileId 
+            WHERE triggeringRoutineId = :triggeringRoutineId 
             AND actionTaken = 'TRIGGERED'
         )
     """)
-    suspend fun resolveLastEvent(triggeringProfileId: Long, action: String)
+    suspend fun resolveLastEvent(triggeringRoutineId: Long, action: String)
 
     @Query("""
         UPDATE activity_events 
         SET groundingChoice = :choice 
         WHERE id = (
             SELECT MAX(id) FROM activity_events 
-            WHERE triggeringProfileId = :triggeringProfileId 
+            WHERE triggeringRoutineId = :triggeringRoutineId 
         )
     """)
-    suspend fun updateLastEventGroundingChoice(triggeringProfileId: Long, choice: String)
+    suspend fun updateLastEventGroundingChoice(triggeringRoutineId: Long, choice: String)
 
     @Query("""
         SELECT * FROM activity_events 
-        WHERE triggeringProfileId = :profileId 
+        WHERE triggeringRoutineId = :routineId 
         AND timestamp BETWEEN :startMs AND :endMs 
         ORDER BY timestamp ASC
     """)
-    fun getEventsForPeriod(profileId: Long, startMs: Long, endMs: Long): Flow<List<ActivityEvent>>
+    fun getEventsForPeriod(routineId: Long, startMs: Long, endMs: Long): Flow<List<ActivityEvent>>
 
     @Query("SELECT * FROM activity_events WHERE timestamp >= :weekStartMs ORDER BY timestamp DESC")
     fun getAllEventsForWeek(weekStartMs: Long): Flow<List<ActivityEvent>>
 
-    // FIXED: Wrapped 'action' in backticks to prevent SQLite keyword clash
     @Query("""
         SELECT actionTaken as `action`, COUNT(*) as count 
         FROM activity_events 
-        WHERE triggeringProfileId = :profileId 
+        WHERE triggeringRoutineId = :routineId 
         AND timestamp BETWEEN :startMs AND :endMs
         AND actionTaken != 'TRIGGERED'
         GROUP BY actionTaken
     """)
-    suspend fun getActionCounts(profileId: Long, startMs: Long, endMs: Long): List<ActionCount>
+    suspend fun getActionCounts(routineId: Long, startMs: Long, endMs: Long): List<ActionCount>
 
     @Query("""
         SELECT appPackage, COUNT(*) as totalAlerts, SUM(durationMs) as totalDurationMs
         FROM activity_events
-        WHERE triggeringProfileId = :profileId
+        WHERE triggeringRoutineId = :routineId
         AND timestamp BETWEEN :startMs AND :endMs
         GROUP BY appPackage
         ORDER BY totalAlerts DESC
         LIMIT 10
     """)
-    suspend fun getTopApps(profileId: Long, startMs: Long, endMs: Long): List<AppUsageStat>
+    suspend fun getTopApps(routineId: Long, startMs: Long, endMs: Long): List<AppUsageStat>
 
     @Query("""
-        SELECT triggeringProfileName, COUNT(*) as triggerCount
+        SELECT triggeringRoutineName, COUNT(*) as triggerCount
         FROM activity_events
         WHERE timestamp BETWEEN :startMs AND :endMs
         AND actionTaken != 'TRIGGERED'
-        GROUP BY triggeringProfileName
+        GROUP BY triggeringRoutineName
         ORDER BY triggerCount DESC
     """)
-    suspend fun getAlertsByProfile(startMs: Long, endMs: Long): List<ProfileTriggerStat>
+    suspend fun getAlertsByRoutine(startMs: Long, endMs: Long): List<RoutineTriggerStat>
 
     @Query("""
         SELECT * FROM activity_events
-        WHERE triggeringProfileId = :profileId
+        WHERE triggeringRoutineId = :routineId
         AND timestamp BETWEEN :startMs AND :endMs
         ORDER BY timestamp DESC
     """)
-    fun getEventsByTriggeringProfile(
-        profileId: Long, startMs: Long, endMs: Long
+    fun getEventsByTriggeringRoutine(
+        routineId: Long, startMs: Long, endMs: Long
     ): Flow<List<ActivityEvent>>
 
     @Query("DELETE FROM activity_events WHERE timestamp < :beforeMs")
@@ -136,8 +133,7 @@ interface ActivityEventDao {
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 
-// FIXED: Set exportSchema = false to resolve the KSP missing directory error
-@Database(entities = [ActivityEvent::class], version = 3, exportSchema = false)
+@Database(entities = [ActivityEvent::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun activityEventDao(): ActivityEventDao
@@ -152,32 +148,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "adhd_assistant_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    // FIXED: Explicitly tell Room to drop the old tables when resetting the schema
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }
             }
-
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN activeProfileIds TEXT NOT NULL DEFAULT '[]'")
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN activeProfileNames TEXT NOT NULL DEFAULT '[]'")
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN triggeringProfileId INTEGER NOT NULL DEFAULT 0")
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN triggeringProfileName TEXT NOT NULL DEFAULT 'Legacy'")
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN triggerClause TEXT NOT NULL DEFAULT '{\"type\":\"com.example.adhdassistant.domain.TriggerClause.ContinuousUsage\",\"thresholdMinutes\":5,\"profileId\":0,\"profileName\":\"Legacy\"}'")
-
-                db.execSQL("""
-                    UPDATE activity_events 
-                    SET activeProfileIds = '[' || profileId || ']',
-                        triggeringProfileId = profileId
-                    WHERE profileId IS NOT NULL AND profileId != 0
-                """)
-            }
-        }
-
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE activity_events ADD COLUMN groundingChoice TEXT")
-            }
-        }
     }
 }

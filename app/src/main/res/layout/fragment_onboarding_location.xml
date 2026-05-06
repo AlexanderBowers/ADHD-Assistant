@@ -1,81 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="32dp">
+        android:layout_marginBottom="16dp"
+        android:text="Context is everything"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🏠"
-            android:textSize="64sp"
-            android:layout_marginBottom="24dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="If you want routines to activate automatically when you get home (or to work), you can enable location access."
+        android:textAlignment="center"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/onboarding_location_title"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface"
-            android:fontFamily="@font/nunito"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="16dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnEnableLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable Location" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/onboarding_location_body"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:fontFamily="@font/nunito"
-            android:gravity="center"
-            android:lineSpacingMultiplier="1.5"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Optional badge -->
-        <com.google.android.material.chip.Chip
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="@string/onboarding_optional_badge"
-            android:layout_marginBottom="24dp"
-            app:chipBackgroundColor="@color/secondary_container" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEnableLocation"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="@string/onboarding_btn_enable_location"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            app:cornerRadius="999dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/onboarding_location_privacy"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:fontFamily="@font/nunito"
-            android:gravity="center"
-            android:layout_marginTop="16dp" />
-
-    </LinearLayout>
-
-</ScrollView>
-
-
-<!-- ══════════════════════════════════════════════════════════════════════
-     FILE: res/layout/fragment_onboarding_routine.xml
-     Page 4 — Pick a starting routine (or skip).
-     ══════════════════════════════════════════════════════════════════════ -->
+</LinearLayout>

@@ -25,6 +25,7 @@ coroutinesTest       = "1.10.2"
 androidxJunit        = "1.3.0"
 espresso             = "3.7.0"
 testCore             = "1.6.1"
+material3 = "1.4.0"
 
 [libraries]
 # UI
@@ -68,6 +69,7 @@ androidx-junit               = { group = "androidx.test.ext",                 na
 espresso-core                = { group = "androidx.test.espresso",            name = "espresso-core",              version.ref = "espresso" }
 test-core-ktx                = { group = "androidx.test",                     name = "core-ktx",                   version.ref = "testCore" }
 room-testing                 = { group = "androidx.room",                     name = "room-testing",               version.ref = "room" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 [plugins]
 android-application          = { id = "com.android.application",                          version.ref = "agp" }

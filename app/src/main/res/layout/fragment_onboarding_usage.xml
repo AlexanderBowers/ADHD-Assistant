@@ -1,81 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="32dp">
+        android:layout_marginBottom="16dp"
+        android:text="How it works"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🔍"
-            android:textSize="64sp"
-            android:layout_marginBottom="24dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="To know if you're stuck scrolling, the app needs permission to see what app is on your screen.\n\nEverything happens securely on your device. We collect nothing."
+        android:textAlignment="center"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/onboarding_usage_title"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textColor="?attr/colorOnSurface"
-            android:fontFamily="@font/nunito"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="16dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGrantUsage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Grant Usage Access" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/onboarding_usage_body"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:fontFamily="@font/nunito"
-            android:gravity="center"
-            android:lineSpacingMultiplier="1.5"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Step-by-step instruction card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="20dp"
-            app:cardBackgroundColor="@color/primary_container"
-            app:cardElevation="0dp"
-            xmlns:app="http://schemas.android.com/apk/res-auto">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/onboarding_usage_steps"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="@color/on_primary_container"
-                    android:fontFamily="@font/nunito"
-                    android:lineSpacingMultiplier="1.6" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-    </LinearLayout>
-
-</ScrollView>
-
-
-<!-- ══════════════════════════════════════════════════════════════════════
-     FILE: res/layout/fragment_onboarding_location.xml
-     Page 3 — Location permission. Optional. Explains the benefit clearly.
-     ══════════════════════════════════════════════════════════════════════ -->
+</LinearLayout>

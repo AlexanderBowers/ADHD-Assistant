@@ -22,17 +22,14 @@
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
 
-        <!-- Shape overrides: rounder than Material3 defaults -->
         <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
 
-        <!-- Typography: Nunito -->
         <item name="android:fontFamily">@font/nunito</item>
         <item name="fontFamily">@font/nunito</item>
     </style>
 
-    <!-- Shape tokens: rounder than default -->
     <style name="ShapeSmall" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerRadius">12dp</item>
     </style>
@@ -43,18 +40,15 @@
         <item name="cornerRadius">28dp</item>
     </style>
 
-    <!-- Alert Activity: warm gradient background, NOT dark -->
     <style name="Theme.ADHDAssistant.Alert" parent="Theme.ADHDAssistant">
         <item name="android:windowBackground">@color/alert_gradient_top</item>
         <item name="android:statusBarColor">@color/alert_gradient_top</item>
     </style>
 
-    <!-- Onboarding: full warm cream -->
     <style name="Theme.ADHDAssistant.Onboarding" parent="Theme.ADHDAssistant">
         <item name="android:windowBackground">@color/background</item>
     </style>
 
-    <!-- Button styles: pill-shaped by default -->
     <style name="Widget.ADHDAssistant.Button" parent="Widget.Material3.Button">
         <item name="cornerRadius">999dp</item>
         <item name="android:paddingTop">14dp</item>
@@ -81,7 +75,6 @@
         <item name="android:fontFamily">@font/nunito</item>
     </style>
 
-    <!-- Card: softer shadow, warmer background -->
     <style name="Widget.ADHDAssistant.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">24dp</item>
         <item name="cardElevation">0dp</item>
@@ -90,9 +83,17 @@
         <item name="cardBackgroundColor">@color/surface</item>
     </style>
 
-    <!-- Chip text appearance -->
     <style name="TextAppearance.ADHDAssistant.Chip" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:fontFamily">@font/nunito</item>
         <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="Theme.ADHDAssistant.Transparent" parent="Theme.ADHDAssistant">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.6</item>
     </style>
 </resources>

@@ -282,16 +282,26 @@ class AlertActivity : AppCompatActivity() {
 
     private fun logAction(action: String) {
         lifecycleScope.launch {
-            val profileId = configRepository.getActiveProfile()?.id ?: 1L
-            database.activityEventDao().resolveLastEvent(profileId, action)
+            // 1. Grab the full active routine so we have its name and threshold
+            val routine = configRepository.getActiveRoutine() ?: com.example.adhdassistant.config.ConfigRepository.buildDefaultRoutine()
+            val routineId = routine.id
+            val routineName = routine.name
+            val currentThreshold = routine.alertThresholdMinutes ?: 5
+
+            database.activityEventDao().resolveLastEvent(routineId, action)
 
             // Record grounding chip choice alongside the action for stats
             selectedChip?.let { choice ->
-                database.activityEventDao().updateLastEventGroundingChoice(profileId, choice)
+                database.activityEventDao().updateLastEventGroundingChoice(routineId, choice)
             }
 
-            // Update adaptive threshold tracking
-            AdaptiveThresholdManager(configRepository).recordAction(action, profileId)
+            // 2. Pass all required parameters to the Adaptive Threshold Manager
+            AdaptiveThresholdManager(configRepository).recordAction(
+                action = action,
+                routineId = routineId,
+                routineName = routineName,
+                currentThreshold = currentThreshold
+            )
         }
     }
 

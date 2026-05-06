@@ -37,7 +37,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvProfileName"
+                    android:id="@+id/tvRoutineName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
@@ -51,7 +51,7 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <!-- "Active now" — shown for any currently-active profile -->
+                    <!-- "Active now" — shown for any currently-active routine -->
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipActive"
                         style="@style/Widget.Material3.Chip.Assist"
@@ -63,7 +63,7 @@
                         app:chipBackgroundColor="@color/secondary_container"
                         app:chipMinHeight="24dp" />
 
-                    <!-- "Inherits from X" — shown for child profiles -->
+                    <!-- "Inherits from X" — shown for child routines -->
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipInherits"
                         style="@style/Widget.Material3.Chip.Assist"
@@ -92,14 +92,14 @@
 
             </LinearLayout>
 
-            <!-- Manual profiles: on/off toggle -->
+            <!-- Manual routines: on/off toggle -->
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchActive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:visibility="gone" />
 
-            <!-- Scheduled profiles: "Auto" label instead of toggle -->
+            <!-- Scheduled routines: "Auto" label instead of toggle -->
             <TextView
                 android:id="@+id/tvAutoLabel"
                 android:layout_width="wrap_content"

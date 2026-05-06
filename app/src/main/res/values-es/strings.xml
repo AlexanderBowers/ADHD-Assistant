@@ -16,7 +16,7 @@
     <string name="nav_intentions">✨ Mis intenciones</string>
     <string name="nav_week">📊 Mi semana</string>
     <string name="nav_settings">⚙️ Configuración</string>
-    <string name="nav_profiles">🗂 Rutinas</string>
+    <string name="nav_routines">🗂 Rutinas</string>
 
     <!-- Pantalla de alerta -->
     <string name="alert_greeting_first">¡Check-in rápido!</string>
@@ -157,7 +157,7 @@
     <string name="stats_encouragement_low">Cada check-in es tú notando. Esa es toda la habilidad.</string>
     <string name="stats_encouragement_mid">Notaste %1$d veces esta semana. Esos son %1$d momentos de autoconciencia que la mayoría nunca tiene.</string>
     <string name="stats_encouragement_high">%1$d check-ins esta semana — de verdad te estás prestando atención. 🌟 Eso importa.</string>
-    <string name="stats_profile_trigger">%1$s · regla %2$s</string>
+    <string name="stats_routine_trigger">%1$s · regla %2$s</string>
     <string name="stats_no_data">Sin check-ins esta semana todavía.\nEl rastreador está listo cuando tú lo estés.</string>
 
     <!-- Errores -->
@@ -171,7 +171,7 @@
     <!-- Accesibilidad -->
     <string name="cd_exclude_toggle">Marcar app como intencional — no activará check-ins</string>
     <string name="cd_drag_handle">Arrastra para reordenar intención</string>
-    <string name="cd_profile_toggle">Activar/desactivar rutina</string>
+    <string name="cd_routine_toggle">Activar/desactivar rutina</string>
     <string name="cd_checkin_count">Número de check-ins hoy</string>
     <string name="cd_add_intention">Agregar intención</string>
     <string name="cd_delete_intention">Eliminar intención</string>
