@@ -12,6 +12,7 @@ import kotlinx.serialization.json.Json
  *
  * Current clause types:
  *   ContinuousUsage — the user used a single app continuously beyond a threshold.
+ *   OnOpen          — the user opened an app that has an immediate intention prompt configured.
  *
  * Future clause types (not yet implemented, but the architecture supports them):
  *   TotalDailyUsage — cumulative screen time across all apps exceeded a limit.
@@ -49,6 +50,21 @@ sealed class TriggerClause {
             }
             return "${thresholdMinutes}min continuous use · $source"
         }
+    }
+
+    /**
+     * Fired the moment a watched app appears in the foreground, before
+     * any usage threshold is reached. Prompts the user about their intention.
+     *
+     * @param profileId    ID of the profile that has this app in onOpenPromptPackages.
+     * @param profileName  Name of that profile (denormalised for display).
+     */
+    @Serializable
+    data class OnOpen(
+        val profileId: Long,
+        val profileName: String
+    ) : TriggerClause() {
+        override fun describe(): String = "Opened app · $profileName"
     }
 
     // ── Serialization helpers ─────────────────────────────────────────────────

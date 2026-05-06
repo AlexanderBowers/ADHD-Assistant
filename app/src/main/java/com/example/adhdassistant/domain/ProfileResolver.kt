@@ -119,12 +119,17 @@ object ProfileResolver {
         var excludedApps = emptySet<String>()
         root.excludedAppOverrides?.let { excludedApps = applyDelta(excludedApps, it) }
 
+        // On-open prompt apps: same delta accumulation as excluded apps
+        var onOpenPromptPackages = emptySet<String>()
+        root.onOpenPromptOverrides?.let { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
+
         for (profile in chain.drop(1)) {
-            profile.startHour?.let             { startHour = it }
-            profile.endHour?.let               { endHour = it }
+            profile.startHour?.let              { startHour = it }
+            profile.endHour?.let                { endHour = it }
             profile.alertThresholdMinutes?.let  { alertThresholdMinutes = it }
-            profile.schedule?.let              { schedule = it }
-            profile.excludedAppOverrides?.let  { excludedApps = applyDelta(excludedApps, it) }
+            profile.schedule?.let               { schedule = it }
+            profile.excludedAppOverrides?.let   { excludedApps = applyDelta(excludedApps, it) }
+            profile.onOpenPromptOverrides?.let  { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
         }
 
         val leaf = chain.last()
@@ -136,6 +141,7 @@ object ProfileResolver {
             endHour               = endHour,
             alertThresholdMinutes = alertThresholdMinutes,
             excludedApps          = excludedApps,
+            onOpenPromptPackages  = onOpenPromptPackages,
             schedule              = schedule,
             isManuallyActive      = leaf.isManuallyActive,
             inheritanceChain      = chain.map { it.name }
@@ -182,6 +188,7 @@ object ProfileMerger {
         val activeProfileNames: List<String>,
         val alertThresholdMinutes: Int,
         val excludedApps: Set<String>,
+        val onOpenPromptPackages: Set<String>,
         val activeHourRanges: List<HourRange>
     ) {
         fun coversHour(hour: Int) = activeHourRanges.any { it.contains(hour) }
@@ -199,6 +206,7 @@ object ProfileMerger {
             activeProfileNames    = resolved.map { it.name },
             alertThresholdMinutes = resolved.minOf { it.alertThresholdMinutes },
             excludedApps          = resolved.flatMap { it.excludedApps }.toSet(),
+            onOpenPromptPackages  = resolved.flatMap { it.onOpenPromptPackages }.toSet(),
             activeHourRanges      = resolved.map { HourRange(it.startHour, it.endHour) }
         )
     }

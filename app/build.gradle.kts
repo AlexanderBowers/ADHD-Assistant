@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.recyclerview)
+    implementation(libs.viewpager2)
 
     // Architecture
     implementation(libs.lifecycle.viewmodel)

@@ -188,4 +188,36 @@
     <string name="dialog_usage_message">Para saber qué app estás usando y ayudarte a mantener el enfoque, necesito \"Acceso de uso\". Tus datos nunca salen de este dispositivo.</string>
     <string name="btn_grant">Dar acceso</string>
     <string name="btn_cancel">Ahora no</string>
+
+    <!-- ── Etiqueta "A continuación" (pantalla principal) ─────────────────── -->
+    <string name="next_up">A continuaci&#243;n &#x1F4CB;</string>
+
+    <!-- __ Incorporaci&#243;n v2 botones ________________________________ -->
+    <string name="onboarding_btn_next">Vamos &#x2192;</string>
+    <string name="onboarding_btn_skip">Omitir por ahora</string>
+    <string name="onboarding_btn_finish">Empezar &#x1F680;</string>
+    <string name="onboarding_btn_grant_usage">Configurar acceso</string>
+    <string name="onboarding_btn_enable_location">Activar detecci&#243;n en casa</string>
+    <string name="onboarding_optional_badge">Opcional</string>
+
+    <!-- P&#225;gina 1 - Bienvenida -->
+    <string name="onboarding_welcome_title">Para personas con\nbuenas intenciones</string>
+    <string name="onboarding_welcome_body">Abriste el tel&#233;fono para buscar algo.\nY sin darte cuenta pas&#243; una hora.\n\nADHD Assistant te recuerda amablemente cuando llevas m&#225;s tiempo del planeado en una app.\n\nSin alarmas. Sin juicios. Solo un toque amable en el hombro.</string>
+    <string name="onboarding_privacy_note">&#x1F512; Tus datos nunca salen de tu tel&#233;fono.\nSin anuncios. Sin servidor. Solo t&#250;.</string>
+
+    <!-- P&#225;gina 2 - Acceso de uso -->
+    <string name="onboarding_usage_title">Un permiso necesario</string>
+    <string name="onboarding_usage_body">Para saber qu&#233; app est&#225;s usando, necesito Acceso de uso. Es un permiso especial de Android &#8212; no hay ventana emergente. Tendr&#225;s que activar un interruptor en la configuraci&#243;n del sistema.</string>
+    <string name="onboarding_usage_steps">1. Toca &#8220;Configurar acceso&#8221; abajo\n2. Busca &#8220;ADHD Assistant&#8221; en la lista\n3. T&#243;calo y activa &#8220;Permitir acceso de uso&#8221;\n4. Regresa aqu&#237; &#8212; continuar&#233; autom&#225;ticamente</string>
+
+    <!-- P&#225;gina 3 - Ubicaci&#243;n (opcional) -->
+    <string name="onboarding_location_title">Detecci&#243;n en casa</string>
+    <string name="onboarding_location_body">Si me dices d&#243;nde est&#225; tu casa, puedo pausar los recordatorios cuando salgas y reanudarlos al volver.\n\nEs completamente opcional &#8212; la app funciona perfectamente sin esto.</string>
+    <string name="onboarding_location_privacy">Tu ubicaci&#243;n solo se usa para saber cu&#225;ndo est&#225;s en casa. Nunca se guarda, comparte ni env&#237;a.</string>
+
+    <!-- P&#225;gina 4 - Rutina -->
+    <string name="onboarding_routine_title">Elige un punto de partida</string>
+    <string name="onboarding_routine_body">Elige una rutina inicial &#8212; puedes ajustar todo despu&#233;s o agregar m&#225;s.\nO s&#225;ltalo y empieza desde cero.</string>
+    <string name="onboarding_routine_skip">Omitir &#8212; crear&#233; la m&#237;a</string>
+
 </resources>

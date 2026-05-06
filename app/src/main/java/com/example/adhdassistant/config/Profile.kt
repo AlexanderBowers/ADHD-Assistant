@@ -68,21 +68,34 @@ data class Profile(
      */
     val excludedAppOverrides: ExcludedAppOverrides? = null,
 
+    /**
+     * Apps that show an immediate intention check-in the moment they appear
+     * in the foreground (fires at session start, not after the usage threshold).
+     *
+     * null  → inherit parent's list unchanged
+     * non-null → apply delta: (inherited + add) - remove
+     *
+     * Example: add "com.chess" so the user is asked about their intention
+     * the instant Chess opens, before they get absorbed.
+     */
+    val onOpenPromptOverrides: ExcludedAppOverrides? = null,
+
     // ── Not inherited — each profile's manual toggle is independent ──────────
     val isManuallyActive: Boolean = false
 ) {
     val isRoot: Boolean get() = parentId == null
 
     fun overrides(field: ProfileField): Boolean = when (field) {
-        ProfileField.START_HOUR    -> startHour != null
-        ProfileField.END_HOUR      -> endHour != null
-        ProfileField.THRESHOLD     -> alertThresholdMinutes != null
-        ProfileField.SCHEDULE      -> schedule != null
-        ProfileField.EXCLUDED_APPS -> excludedAppOverrides != null && !excludedAppOverrides.isEmpty
+        ProfileField.START_HOUR      -> startHour != null
+        ProfileField.END_HOUR        -> endHour != null
+        ProfileField.THRESHOLD       -> alertThresholdMinutes != null
+        ProfileField.SCHEDULE        -> schedule != null
+        ProfileField.EXCLUDED_APPS   -> excludedAppOverrides != null && !excludedAppOverrides.isEmpty
+        ProfileField.ON_OPEN_PROMPTS -> onOpenPromptOverrides != null && !onOpenPromptOverrides.isEmpty
     }
 }
 
-enum class ProfileField { START_HOUR, END_HOUR, THRESHOLD, EXCLUDED_APPS, SCHEDULE }
+enum class ProfileField { START_HOUR, END_HOUR, THRESHOLD, EXCLUDED_APPS, SCHEDULE, ON_OPEN_PROMPTS }
 
 // ─── Resolved Profile ─────────────────────────────────────────────────────────
 
@@ -98,6 +111,7 @@ data class ResolvedProfile(
     val endHour: Int,
     val alertThresholdMinutes: Int,
     val excludedApps: Set<String>,
+    val onOpenPromptPackages: Set<String>,
     val schedule: ProfileSchedule,
     val isManuallyActive: Boolean,
     val inheritanceChain: List<String>   // Root-first, e.g. ["Weekday", "Monday"]
@@ -193,4 +207,7 @@ object ProfilePresets {
     )
 
     val all = listOf(WEEKDAY, WEEKEND, EVERY_DAY, GYM, WORK_HOURS, MONDAY, FRIDAY)
+
+    /** Top-level presets shown on the onboarding routine picker (no parent). */
+    val rootProfiles = listOf(WEEKDAY, WEEKEND, EVERY_DAY, GYM)
 }

@@ -18,6 +18,7 @@ billing              = "8.3.0"
 serialization        = "1.11.0"
 playServicesLocation = "21.3.0"
 workManager          = "2.11.2"
+viewpager2           = "1.1.0"
 junit                = "4.13.2"
 mockk                = "1.14.9"
 coroutinesTest       = "1.10.2"
@@ -32,6 +33,7 @@ appcompat                    = { group = "androidx.appcompat",                na
 material                     = { group = "com.google.android.material",       name = "material",                   version.ref = "material" }
 constraintlayout             = { group = "androidx.constraintlayout",         name = "constraintlayout",           version.ref = "constraintlayout" }
 recyclerview                 = { group = "androidx.recyclerview",             name = "recyclerview",               version.ref = "recyclerview" }
+viewpager2                   = { group = "androidx.viewpager2",              name = "viewpager2",                 version.ref = "viewpager2" }
 
 # Architecture
 lifecycle-viewmodel          = { group = "androidx.lifecycle",                name = "lifecycle-viewmodel-ktx",    version.ref = "lifecycle" }

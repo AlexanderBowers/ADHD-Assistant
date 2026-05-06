@@ -14,18 +14,23 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.IOException
 
+// ─── DataStore singleton (file-level so only one instance exists per process) ──
+// Must be declared here, outside any class, to satisfy DataStore's singleton rule.
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "adhd_settings"
+)
+
 /**
  * Single source of truth for all persistent app settings.
  *
  * Replaces ConfigManager (SharedPreferences).
  * Uses DataStore for coroutine-safe reads/writes and Flow-based observation.
+ *
+ * Obtain the singleton instance via ADHDApplication.configRepository — never
+ * construct this class directly, as that would create multiple DataStore
+ * instances pointing at the same file and crash at runtime.
  */
 class ConfigRepository(private val context: Context) {
-
-    // ─── DataStore instance (one per app, lazy) ───────────────────────────────
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-        name = "adhd_settings"
-    )
 
     // ─── Keys ─────────────────────────────────────────────────────────────────
     private object Keys {
@@ -88,6 +93,17 @@ class ConfigRepository(private val context: Context) {
         val id = context.dataStore.data.first()[Keys.ACTIVE_PROFILE_ID] ?: 1L
         val profiles = getProfiles()
         return profiles.firstOrNull { it.id == id } ?: profiles.firstOrNull()
+    }
+
+    /**
+     * Returns the active profile fully resolved through its inheritance chain.
+     * Prefer this over [getActiveProfile] when you need computed fields like
+     * [ResolvedProfile.onOpenPromptPackages] that may be inherited from a parent.
+     */
+    suspend fun getActiveResolvedProfile(): com.example.adhdassistant.config.ResolvedProfile? {
+        val profiles = getProfiles()
+        val active   = getActiveProfile() ?: return null
+        return com.example.adhdassistant.domain.ProfileResolver.resolve(active, profiles)
     }
 
     // Delegates to profilesFlow so both stay in sync
@@ -158,6 +174,35 @@ class ConfigRepository(private val context: Context) {
         context.dataStore.edit { it[Keys.ACTIVE_PROFILE_ID] = profileId }
     }
 
+    /**
+     * Adds [packageName] to the on-open intention-prompt list for [profileId].
+     * If the profile already has the package, this is a no-op.
+     */
+    suspend fun addOnOpenPromptPackage(profileId: Long, packageName: String) {
+        val profile = getProfiles().firstOrNull { it.id == profileId } ?: return
+        val current = profile.onOpenPromptOverrides ?: ExcludedAppOverrides()
+        if (packageName in current.add) return   // already present
+        val updated = profile.copy(
+            onOpenPromptOverrides = current.copy(add = current.add + packageName)
+        )
+        saveProfile(updated)
+    }
+
+    /**
+     * Removes [packageName] from the on-open intention-prompt list for [profileId].
+     */
+    suspend fun removeOnOpenPromptPackage(profileId: Long, packageName: String) {
+        val profile = getProfiles().firstOrNull { it.id == profileId } ?: return
+        val current = profile.onOpenPromptOverrides ?: return
+        val updated = profile.copy(
+            onOpenPromptOverrides = current.copy(
+                add    = current.add - packageName,
+                remove = current.remove + packageName
+            )
+        )
+        saveProfile(updated)
+    }
+
     suspend fun saveProfile(profile: Profile) {
         val profiles = getProfiles().toMutableList()
         val index = profiles.indexOfFirst { it.id == profile.id }
@@ -192,6 +237,22 @@ class ConfigRepository(private val context: Context) {
         excludedAppOverrides  = null,
         isManuallyActive      = false
     )
+
+    companion object {
+        /** Used by OnboardingActivity when the user skips the routine picker. */
+        fun buildDefaultProfile() = Profile(
+            id                    = 1L,
+            name                  = "Default",
+            emoji                 = "🧠",
+            parentId              = null,
+            startHour             = 8,
+            endHour               = 22,
+            alertThresholdMinutes = 5,
+            schedule              = ProfileSchedule.DaysOfWeek(setOf(1, 2, 3, 4, 5, 6, 7)),
+            excludedAppOverrides  = null,
+            isManuallyActive      = false
+        )
+    }
 
     private inline fun <reified T> String.deserializeList(): List<T> =
         runCatching { Json.decodeFromString<List<T>>(this) }.getOrDefault(emptyList())

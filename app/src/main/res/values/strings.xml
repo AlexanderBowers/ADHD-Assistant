@@ -34,6 +34,10 @@
     <string name="alert_emoji_many">😄</string>
     <string name="alert_message_many">You\'ve been here a while. Want to try putting it down, just this once?\nYou can always come back.</string>
 
+    <!-- On-open intention prompt -->
+    <string name="alert_greeting_on_open">Quick intention check 🎯</string>
+    <string name="alert_message_on_open">You just opened &lt;b>%1$s&lt;/b>.\nWhat\'s your intention for this session?</string>
+
     <!-- What brought you here section -->
     <string name="alert_grounding_label">What brought you here?</string>
     <string name="alert_chip_browsing">Just browsing</string>
@@ -199,4 +203,38 @@
     <string name="dialog_usage_message">To know which app you\'re using and help you stay mindful, I need \"Usage Access\". Your data never leaves this device.</string>
     <string name="btn_grant">Grant access</string>
     <string name="btn_cancel">Not now</string>
+
+
+
+    <!-- __ Next Up label (main screen intention card) ______________ -->
+    <string name="next_up">Next up &#x1F4CB;</string>
+
+    <!-- __ Onboarding v2 buttons ___________________________________ -->
+    <string name="onboarding_btn_next">Let\'s go &#x2192;</string>
+    <string name="onboarding_btn_skip">Skip for now</string>
+    <string name="onboarding_btn_finish">Get started &#x1F680;</string>
+    <string name="onboarding_btn_grant_usage">Set up access</string>
+    <string name="onboarding_btn_enable_location">Enable home detection</string>
+    <string name="onboarding_optional_badge">Optional</string>
+
+    <!-- Page 1 - Welcome -->
+    <string name="onboarding_welcome_title">For people with\nhonest intentions</string>
+    <string name="onboarding_welcome_body">You opened your phone to Google something.\nNext thing you know, it\'s been an hour.\n\nADHD Assistant gently checks in when you\'ve been on an app longer than you planned.\n\nNo alarms. No judgment. Just a friendly tap on the shoulder.</string>
+    <string name="onboarding_privacy_note">&#x1F512; Your data never leaves your phone.\nNo ads. No server. Just you.</string>
+
+    <!-- Page 2 - Usage Access -->
+    <string name="onboarding_usage_title">One permission needed</string>
+    <string name="onboarding_usage_body">To know which app you\'re in, I need Usage Access. This is a special Android permission &#8212; there\'s no pop-up dialog. You\'ll need to flip a toggle in your system settings.</string>
+    <string name="onboarding_usage_steps">1. Tap &#8220;Set up access&#8221; below\n2. Find &#8220;ADHD Assistant&#8221; in the list\n3. Tap it and turn on &#8220;Permit usage access&#8221;\n4. Come back here &#8212; I\'ll continue automatically</string>
+
+    <!-- Page 3 - Location (optional) -->
+    <string name="onboarding_location_title">Home detection</string>
+    <string name="onboarding_location_body">If you tell me where home is, I can automatically pause check-ins when you\'re out and resume when you\'re back.\n\nThis is completely optional &#8212; the app works perfectly without it.</string>
+    <string name="onboarding_location_privacy">Your location is only used to detect when you\'re home. It\'s never stored, shared, or sent anywhere.</string>
+
+    <!-- Page 4 - Pick a routine -->
+    <string name="onboarding_routine_title">Pick a starting point</string>
+    <string name="onboarding_routine_body">Choose a routine to start with &#8212; you can tweak everything later, or add more.\nOr skip this and start fresh.</string>
+    <string name="onboarding_routine_skip">Skip &#8212; I\'ll set up my own</string>
+
 </resources>

@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.R
-import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.databinding.ActivityExcludedAppsBinding
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +40,7 @@ class ExcludedAppsActivity : AppCompatActivity() {
     )
 
     private lateinit var binding: ActivityExcludedAppsBinding
-    private lateinit var configRepository: ConfigRepository
+    private val configRepository get() = (application as ADHDApplication).configRepository
     private lateinit var adapter: AppAdapter
 
     private val allApps = mutableListOf<AppItem>()
@@ -54,8 +54,6 @@ class ExcludedAppsActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.excluded_title)
-
-        configRepository = ConfigRepository(applicationContext)
 
         adapter = AppAdapter { app, isChecked ->
             app.isExcluded = isChecked

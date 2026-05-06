@@ -1,10 +1,10 @@
 package com.example.adhdassistant.ui.alert
 
 import android.os.Bundle
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.ScrollView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.adhdassistant.R
 import com.example.adhdassistant.tracking.UsageTrackingService
 import com.google.android.material.button.MaterialButton
@@ -21,6 +21,13 @@ class UsefulSessionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_useful_session)
+
+        val scrollView = findViewById<ScrollView>(R.id.scrollViewUseful)
+        ViewCompat.setOnApplyWindowInsetsListener(scrollView) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            scrollView.setPadding(0, 0, 0, bars.bottom)
+            insets
+        }
 
         val chipGroup = findViewById<ChipGroup>(R.id.chipGroupUseType)
         val btnSpace  = findViewById<MaterialButton>(R.id.btnGiveSpace)
@@ -43,13 +50,13 @@ class UsefulSessionActivity : AppCompatActivity() {
             chipGroup.addView(chip)
         }
 
-        // User wants more time — extend snooze to 30 min
+        // User wants more time -- extend snooze to 30 min
         btnSpace.setOnClickListener {
             startService(UsageTrackingService.snoozeIntent(this, 30))
             finish()
         }
 
-        // Changed their mind — just close
+        // Changed their mind -- just close
         btnNever.setOnClickListener { finish() }
     }
 }

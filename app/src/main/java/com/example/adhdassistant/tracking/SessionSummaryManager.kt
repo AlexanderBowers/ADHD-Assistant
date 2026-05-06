@@ -9,8 +9,8 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.R
-import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.data.AppDatabase
 import kotlinx.coroutines.*
 import java.util.Calendar
@@ -57,7 +57,7 @@ class SessionSummaryReceiver : BroadcastReceiver() {
 
         scope.launch {
             try {
-                val config = configRepository(context)
+                val config = (context.applicationContext as ADHDApplication).configRepository
                 val lastNotifMs = config.getLastSummaryNotificationMs()
                 val now = System.currentTimeMillis()
 
@@ -137,7 +137,7 @@ class SessionSummaryReceiver : BroadcastReceiver() {
         }.timeInMillis
     }
 
-    private fun configRepository(context: Context) = ConfigRepository(context)
+    // configRepository is accessed via ADHDApplication singleton — see call sites above
 }
 
 // ─── Add to ConfigRepository.kt ──────────────────────────────────────────────

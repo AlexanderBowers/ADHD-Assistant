@@ -4,20 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.android.billingclient.api.*
+import com.example.adhdassistant.BuildConfig
 import com.example.adhdassistant.config.ConfigRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/**
- * Manages Google Play In-App Purchases for the $0.99 Pro upgrade.
- *
- * Usage:
- *   val billing = BillingManager(context, lifecycleScope, configRepository)
- *   billing.proStatus.collect { isPro -> updateUI(isPro) }
- *   billing.launchProPurchase(activity)
- */
 class BillingManager(
     private val context: Context,
     private val scope: CoroutineScope,
@@ -29,6 +22,9 @@ class BillingManager(
         private const val TAG = "BillingManager"
         private const val MAX_RETRY_ATTEMPTS = 3
         private const val RETRY_DELAY_MS = 2000L
+
+        /** In debug builds Pro is automatically granted — no Play purchase needed. */
+        private val DEBUG_PRO_ENABLED = BuildConfig.DEBUG
     }
 
     sealed class BillingState {
@@ -58,14 +54,16 @@ class BillingManager(
         .build()
 
     init {
-        // Immediately reflect any cached Pro status from DataStore
-        scope.launch {
-            _proStatus.value = configRepository.isProVersion()
+        if (DEBUG_PRO_ENABLED) {
+            Log.d(TAG, "Debug build — Pro features unlocked without purchase")
+            _proStatus.value = true
+            _billingState.value = BillingState.Connected
+            scope.launch { configRepository.setProVersion(true) }
+        } else {
+            scope.launch { _proStatus.value = configRepository.isProVersion() }
+            connect()
         }
-        connect()
     }
-
-    // ─── Connection ──────────────────────────────────────────────────────────
 
     private fun connect() {
         billingClient.startConnection(object : BillingClientStateListener {
@@ -93,10 +91,7 @@ class BillingManager(
     }
 
     private fun scheduleReconnect() {
-        if (retryCount >= MAX_RETRY_ATTEMPTS) {
-            Log.e(TAG, "Max reconnect attempts reached")
-            return
-        }
+        if (retryCount >= MAX_RETRY_ATTEMPTS) { Log.e(TAG, "Max reconnect attempts reached"); return }
         retryCount++
         scope.launch {
             delay(RETRY_DELAY_MS * retryCount)
@@ -104,30 +99,21 @@ class BillingManager(
         }
     }
 
-    // ─── Purchase Flow ───────────────────────────────────────────────────────
-
-    /**
-     * Call from an Activity to launch the $0.99 purchase bottom sheet.
-     * Returns false if product details haven't loaded yet.
-     */
+    /** In debug builds, Pro is already granted — returns true immediately. */
     suspend fun launchProPurchase(activity: Activity): Boolean {
-        if (cachedProductDetails == null) {
-            cacheProductDetails()
+        if (DEBUG_PRO_ENABLED) {
+            _billingState.value = BillingState.PurchaseSuccess(PRO_PRODUCT_ID)
+            return true
         }
+        if (cachedProductDetails == null) cacheProductDetails()
         val details = cachedProductDetails ?: run {
             _billingState.value = BillingState.PurchaseError("Product not available")
             return false
         }
         val params = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
-                listOf(
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(details)
-                        .build()
-                )
-            )
-            .build()
-
+                listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).build())
+            ).build()
         val result = billingClient.launchBillingFlow(activity, params)
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
             Log.e(TAG, "launchBillingFlow failed: ${result.debugMessage}")
@@ -137,51 +123,33 @@ class BillingManager(
         return true
     }
 
-    /**
-     * Restore purchases — call when user taps "Restore Purchase" in Settings.
-     */
+    /** In debug builds, Pro is already granted — emits AlreadyOwned. */
     suspend fun restorePurchases() {
-        if (!billingClient.isReady) {
-            _billingState.value = BillingState.PurchaseError("Billing not ready")
-            return
-        }
+        if (DEBUG_PRO_ENABLED) { _billingState.value = BillingState.AlreadyOwned; return }
+        if (!billingClient.isReady) { _billingState.value = BillingState.PurchaseError("Billing not ready"); return }
         queryAndSyncPurchases()
     }
 
-    // ─── PurchasesUpdatedListener ─────────────────────────────────────────────
-
     override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
         when (result.responseCode) {
-            BillingClient.BillingResponseCode.OK -> {
-                purchases?.let {
-                    scope.launch { handlePurchases(it) }
-                }
-            }
-            BillingClient.BillingResponseCode.USER_CANCELED -> {
-                _billingState.value = BillingState.PurchaseCancelled
-            }
+            BillingClient.BillingResponseCode.OK -> purchases?.let { scope.launch { handlePurchases(it) } }
+            BillingClient.BillingResponseCode.USER_CANCELED -> _billingState.value = BillingState.PurchaseCancelled
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
                 _billingState.value = BillingState.AlreadyOwned
                 scope.launch { queryAndSyncPurchases() }
             }
             else -> {
-                Log.e(TAG, "Purchase error: ${result.responseCode} — ${result.debugMessage}")
+                Log.e(TAG, "Purchase error: ${result.responseCode}")
                 _billingState.value = BillingState.PurchaseError(result.debugMessage)
             }
         }
     }
 
-    // ─── Internal Helpers ─────────────────────────────────────────────────────
-
     private suspend fun queryAndSyncPurchases() {
         if (!billingClient.isReady) return
-
         val result = billingClient.queryPurchasesAsync(
-            QueryPurchasesParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build()
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
         )
-
         if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
             handlePurchases(result.purchasesList)
         }
@@ -189,33 +157,23 @@ class BillingManager(
 
     private suspend fun handlePurchases(purchases: List<Purchase>) {
         var foundPro = false
-
         for (purchase in purchases) {
             if (purchase.products.contains(PRO_PRODUCT_ID)) {
                 when (purchase.purchaseState) {
                     Purchase.PurchaseState.PURCHASED -> {
                         foundPro = true
-                        if (!purchase.isAcknowledged) {
-                            acknowledge(purchase)
-                        }
+                        if (!purchase.isAcknowledged) acknowledge(purchase)
                         _billingState.value = BillingState.PurchaseSuccess(PRO_PRODUCT_ID)
                     }
-                    Purchase.PurchaseState.PENDING -> {
-                        // Don't grant Pro yet; wait for PURCHASED state
-                        Log.d(TAG, "Purchase pending for ${purchase.products}")
-                    }
+                    Purchase.PurchaseState.PENDING -> Log.d(TAG, "Purchase pending for ${purchase.products}")
                     else -> Unit
                 }
             }
         }
-
-        // Sync Pro status to DataStore (single source of truth)
         if (foundPro != _proStatus.value) {
             _proStatus.value = foundPro
             configRepository.setProVersion(foundPro)
         }
-
-        // If no active purchases found, ensure Pro is revoked
         if (purchases.isEmpty() && _proStatus.value) {
             _proStatus.value = false
             configRepository.setProVersion(false)
@@ -223,9 +181,7 @@ class BillingManager(
     }
 
     private suspend fun acknowledge(purchase: Purchase) {
-        val params = AcknowledgePurchaseParams.newBuilder()
-            .setPurchaseToken(purchase.purchaseToken)
-            .build()
+        val params = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
         val result = billingClient.acknowledgePurchase(params)
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
             Log.e(TAG, "Acknowledge failed: ${result.debugMessage}")
@@ -236,33 +192,24 @@ class BillingManager(
 
     private suspend fun cacheProductDetails() {
         if (!billingClient.isReady) return
-
         val result = billingClient.queryProductDetails(
-            QueryProductDetailsParams.newBuilder()
-                .setProductList(
-                    listOf(
-                        QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId(PRO_PRODUCT_ID)
-                            .setProductType(BillingClient.ProductType.INAPP)
-                            .build()
-                    )
-                )
-                .build()
+            QueryProductDetailsParams.newBuilder().setProductList(
+                listOf(QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(PRO_PRODUCT_ID)
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build())
+            ).build()
         )
-
         if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
             cachedProductDetails = result.productDetailsList?.firstOrNull()
             Log.d(TAG, "Product details loaded: ${cachedProductDetails?.name}")
         }
     }
 
-    /**
-     * Get formatted price string (e.g. "$0.99") for display in UI.
-     */
+    /** Returns "$0.99" in debug builds; formatted Play price in release. */
     fun getFormattedPrice(): String? {
-        return cachedProductDetails
-            ?.oneTimePurchaseOfferDetails
-            ?.formattedPrice
+        if (DEBUG_PRO_ENABLED) return "$0.99"
+        return cachedProductDetails?.oneTimePurchaseOfferDetails?.formattedPrice
     }
 
     fun destroy() {

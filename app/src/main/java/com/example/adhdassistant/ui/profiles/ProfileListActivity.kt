@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.adhdassistant.config.ConfigRepository
+import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.config.Profile
 import com.example.adhdassistant.config.ProfileSchedule
 import com.example.adhdassistant.databinding.ActivityProfileListBinding
@@ -37,7 +37,7 @@ import java.util.Calendar
 class ProfileListActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileListBinding
-    private lateinit var configRepository: ConfigRepository
+    private val configRepository get() = (application as ADHDApplication).configRepository
     private lateinit var adapter: ProfileAdapter
 
     private var profiles = mutableListOf<Profile>()
@@ -50,8 +50,6 @@ class ProfileListActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Routines"
-
-        configRepository = ConfigRepository(applicationContext)
 
         adapter = ProfileAdapter(
             onToggle = { profile, isOn -> applyToggle(profile, isOn) },

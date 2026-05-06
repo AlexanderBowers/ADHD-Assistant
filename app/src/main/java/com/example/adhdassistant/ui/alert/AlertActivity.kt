@@ -9,9 +9,11 @@ import android.view.WindowManager
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.R
-import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.data.AppDatabase
 import com.example.adhdassistant.databinding.ActivityAlertBinding
 import com.example.adhdassistant.domain.AdaptiveThresholdManager
@@ -25,41 +27,48 @@ import kotlinx.coroutines.launch
  * The check-in alert screen.
  *
  * Three language levels based on consecutive "keep going" responses:
- *   FIRST  — "Quick check-in! 👋"
- *   REPEAT — "Hey again! 😊"
- *   MANY   — "We keep meeting like this 😄"
+ *   FIRST  -- "Quick check-in! \uD83D\uDC4B"
+ *   REPEAT -- "Hey again! \uD83D\uDE0A"
+ *   MANY   -- "We keep meeting like this \uD83D\uDE04"
  *
  * Flow:
- *   → "Wrapping up"        → grounding moment → close
- *   → "Doing something useful" → UsefulSessionActivity + snooze
- *   → "Keep going"         → log + close
+ *   -> "Wrapping up"        -> grounding moment -> close
+ *   -> "Doing something useful" -> UsefulSessionActivity + snooze
+ *   -> "Keep going"         -> log + close
  *
- * Back button disabled — user must make an active choice.
+ * Back button disabled -- user must make an active choice.
  * The moment of choosing is the intervention.
  */
 class AlertActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_DURATION_MS  = "duration_ms"
-        const val EXTRA_APP_PACKAGE  = "app_package"
-        const val EXTRA_CHORE_TEXT   = "chore_text"
-        const val EXTRA_ALERT_LEVEL  = "alert_level"
+        const val EXTRA_DURATION_MS    = "duration_ms"
+        const val EXTRA_APP_PACKAGE    = "app_package"
+        const val EXTRA_CHORE_TEXT     = "chore_text"
+        const val EXTRA_ALERT_LEVEL    = "alert_level"
+        const val EXTRA_TRIGGER_TYPE   = "trigger_type"
+
+        /** Alert fired by the time-based continuous-usage threshold. */
+        const val TRIGGER_TYPE_THRESHOLD = "threshold"
+        /** Alert fired immediately when a watched app opens. */
+        const val TRIGGER_TYPE_ON_OPEN   = "on_open"
     }
 
     private lateinit var binding: ActivityAlertBinding
-    private lateinit var configRepository: ConfigRepository
+    private val configRepository get() = (application as ADHDApplication).configRepository
     private lateinit var database: AppDatabase
 
     private var durationMs    = 0L
     private var appPackage    = ""
     private var intentionText: String? = null
     private var alertLevel    = ReAlertTracker.AlertLevel.FIRST
+    private var triggerType   = TRIGGER_TYPE_THRESHOLD
     private var selectedChip: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Show on lock screen — shoulder tap, not alarm
+        // Show on lock screen -- shoulder tap, not alarm
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -72,7 +81,7 @@ class AlertActivity : AppCompatActivity() {
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Warm sunrise gradient — not dark, not alarming
+        // Warm sunrise gradient -- not dark, not alarming
         window.decorView.background = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(
@@ -85,11 +94,10 @@ class AlertActivity : AppCompatActivity() {
         binding = ActivityAlertBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        configRepository = ConfigRepository(applicationContext)
-        database         = AppDatabase.getDatabase(applicationContext)
+        database = AppDatabase.getDatabase(applicationContext)
 
         onBackPressedDispatcher.addCallback(this) {
-            // No back — user must choose
+            // No back -- user must choose
         }
 
         durationMs    = intent.getLongExtra(EXTRA_DURATION_MS, 0L)
@@ -98,36 +106,69 @@ class AlertActivity : AppCompatActivity() {
         alertLevel    = intent.getStringExtra(EXTRA_ALERT_LEVEL)
             ?.let { runCatching { ReAlertTracker.AlertLevel.valueOf(it) }.getOrNull() }
             ?: ReAlertTracker.AlertLevel.FIRST
+        triggerType   = intent.getStringExtra(EXTRA_TRIGGER_TYPE) ?: TRIGGER_TYPE_THRESHOLD
 
+        applyWindowInsets()
         setupGreeting()
         setupIntentionCard()
         setupGroundingChips()
         setupButtons()
     }
 
-    // ─── Greeting ────────────────────────────────────────────────────────────
+    private fun applyWindowInsets() {
+        // The alert screen has two ScrollViews (alert content + grounding).
+        // Give each one extra bottom padding matching the system navigation bar,
+        // so the action buttons are never hidden behind permanent nav buttons.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Extend the existing paddingBottom in each ScrollView's inner LinearLayout
+            listOf(binding.layoutAlert, binding.layoutGrounding).forEach { scrollView ->
+                val inner = scrollView.getChildAt(0)
+                inner?.setPadding(
+                    inner.paddingLeft,
+                    inner.paddingTop,
+                    inner.paddingRight,
+                    bars.bottom + resources.getDimensionPixelOffset(R.dimen.alert_bottom_extra)
+                )
+            }
+            insets
+        }
+    }
 
     private fun setupGreeting() {
-        val minutes = (durationMs / 60_000).coerceAtLeast(1)
-
         data class Greeting(val emoji: String, val title: String, val message: String)
 
-        val g = when (alertLevel) {
-            ReAlertTracker.AlertLevel.FIRST -> Greeting(
-                "👋",
-                getString(R.string.alert_greeting_first),
-                getString(R.string.alert_message_first, minutes.toString())
+        val g = if (triggerType == TRIGGER_TYPE_ON_OPEN) {
+            // On-open: prompt for intention before the user gets absorbed
+            val appLabel = runCatching {
+                packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(appPackage, 0)
+                ).toString()
+            }.getOrElse { appPackage }
+            Greeting(
+                "\uD83C\uDFAF",
+                getString(R.string.alert_greeting_on_open),
+                getString(R.string.alert_message_on_open, appLabel)
             )
-            ReAlertTracker.AlertLevel.REPEAT -> Greeting(
-                "😊",
-                getString(R.string.alert_greeting_repeat),
-                getString(R.string.alert_message_repeat, minutes.toString())
-            )
-            ReAlertTracker.AlertLevel.MANY -> Greeting(
-                "😄",
-                getString(R.string.alert_greeting_many),
-                getString(R.string.alert_message_many)
-            )
+        } else {
+            val minutes = (durationMs / 60_000).coerceAtLeast(1)
+            when (alertLevel) {
+                ReAlertTracker.AlertLevel.FIRST -> Greeting(
+                    "\uD83D\uDC4B",
+                    getString(R.string.alert_greeting_first),
+                    getString(R.string.alert_message_first, minutes.toString())
+                )
+                ReAlertTracker.AlertLevel.REPEAT -> Greeting(
+                    "\uD83D\uDE0A",
+                    getString(R.string.alert_greeting_repeat),
+                    getString(R.string.alert_message_repeat, minutes.toString())
+                )
+                ReAlertTracker.AlertLevel.MANY -> Greeting(
+                    "\uD83D\uDE04",
+                    getString(R.string.alert_greeting_many),
+                    getString(R.string.alert_message_many)
+                )
+            }
         }
 
         binding.tvEmoji.text  = g.emoji
@@ -137,16 +178,12 @@ class AlertActivity : AppCompatActivity() {
         )
     }
 
-    // ─── Intention card ───────────────────────────────────────────────────────
-
     private fun setupIntentionCard() {
         if (!intentionText.isNullOrEmpty()) {
             binding.cardIntention.visibility = View.VISIBLE
             binding.tvIntentionText.text     = intentionText
         }
     }
-
-    // ─── "What brought you here?" chips ──────────────────────────────────────
 
     private fun setupGroundingChips() {
         val labels = listOf(
@@ -186,8 +223,6 @@ class AlertActivity : AppCompatActivity() {
         }
     }
 
-    // ─── Action buttons ───────────────────────────────────────────────────────
-
     private fun setupButtons() {
         binding.btnDone.setOnClickListener     { handleDone() }
         binding.btnUseful.setOnClickListener   { handleUseful() }
@@ -210,8 +245,6 @@ class AlertActivity : AppCompatActivity() {
         logAction("IGNORED")
         finish()
     }
-
-    // ─── Grounding moment ─────────────────────────────────────────────────────
 
     private fun showGroundingMoment() {
         // Fade out the alert content
@@ -246,8 +279,6 @@ class AlertActivity : AppCompatActivity() {
 
         binding.btnGroundingDone.setOnClickListener { finish() }
     }
-
-    // ─── Logging ─────────────────────────────────────────────────────────────
 
     private fun logAction(action: String) {
         lifecycleScope.launch {

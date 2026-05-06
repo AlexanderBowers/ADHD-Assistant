@@ -5,6 +5,7 @@
 package com.example.adhdassistant
 
 import android.app.Application
+import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,8 +18,16 @@ import java.util.concurrent.TimeUnit
  *   - Prune event log entries older than 90 days (keeps the DB lean)
  *
  * Everything else uses lazy initialisation — no heavy work in onCreate().
+ *
+ * [configRepository] is the process-wide singleton for DataStore access.
+ * Activities and services must use this instance rather than constructing
+ * ConfigRepository themselves, to avoid the "multiple DataStore instances"
+ * IllegalStateException.
  */
 class ADHDApplication : Application() {
+
+    /** Single DataStore-backed repository for the lifetime of the process. */
+    val configRepository: ConfigRepository by lazy { ConfigRepository(this) }
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
