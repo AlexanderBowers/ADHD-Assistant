@@ -107,8 +107,9 @@ class UsageTrackingService : Service() {
 
     private fun startForegroundCompat() {
         val notification = buildNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, 0x40000000)
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(NOTIFICATION_ID, notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
@@ -273,10 +274,10 @@ class UsageTrackingService : Service() {
         )
         database.activityEventDao().insertEvent(event)
 
-        val bundle = com.example.adhdassistant.tracking.AlertTriggerBundle(
+        val bundle = AlertTriggerBundle(
             routineId         = routine.id,
             routineName       = routine.name,
-            locationName      = routine.name,
+            locationName      = routine.locationName ?: routine.name,
             accumulatedTimeMs = durationMs,
             thresholdMs       = routine.alertThresholdMinutes * 60_000L,
             distractingApp    = packageName,

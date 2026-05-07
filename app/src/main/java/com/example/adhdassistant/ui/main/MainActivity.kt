@@ -4,10 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.databinding.ActivityMainBinding
 import com.example.adhdassistant.tracking.UsageTrackingService
+import com.example.adhdassistant.ui.onboarding.OnboardingActivity
 import com.example.adhdassistant.ui.settings.SettingsActivity
 import com.example.adhdassistant.utils.PermissionManager
 import kotlinx.coroutines.flow.collectLatest
@@ -21,14 +24,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!configRepository.isOnboardingComplete()) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.root.setPadding(0, 0, 0, bars.bottom)
+            insets
+        }
 
         permissionManager = PermissionManager(this)
 
         setupNavButtons()
 
-        // Observe top intention
         lifecycleScope.launch {
             configRepository.intentionListFlow.collectLatest { intentions ->
                 val top = intentions.firstOrNull()
@@ -44,7 +59,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNavButtons() {
-        // Original Buttons
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -54,13 +68,9 @@ class MainActivity : AppCompatActivity() {
         binding.btnStats.setOnClickListener {
             startActivity(Intent(this, com.example.adhdassistant.ui.stats.StatsActivity::class.java))
         }
-
-        // New Routine/Feature Buttons
         binding.btnRoutines.setOnClickListener {
             startActivity(Intent(this, com.example.adhdassistant.ui.routines.RoutineListActivity::class.java))
         }
-
-        // DEV Test Button
         binding.btnTestInterrupt.setOnClickListener {
             val fakeBundle = com.example.adhdassistant.tracking.AlertTriggerBundle(
                 routineId = 0L,

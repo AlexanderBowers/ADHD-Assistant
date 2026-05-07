@@ -3,7 +3,6 @@ package com.example.adhdassistant.ui.onboarding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -52,7 +51,7 @@ class OnboardingActivity : AppCompatActivity() {
 
         binding.btnNext.setOnClickListener {
             val currentItem = binding.viewPager.currentItem
-            if (currentItem < 3) {
+            if (currentItem < 2) {
                 binding.viewPager.currentItem = currentItem + 1
             } else {
                 finishOnboarding()
@@ -63,12 +62,11 @@ class OnboardingActivity : AppCompatActivity() {
     private fun setupViewPager() {
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.adapter = object : FragmentStateAdapter(this) {
-            override fun getItemCount() = 4
+            override fun getItemCount() = 3
             override fun createFragment(position: Int): Fragment = when (position) {
                 0 -> Fragment(R.layout.fragment_onboarding_welcome)
                 1 -> UsageAccessFragment()
-                2 -> LocationFragment()
-                3 -> PickRoutineFragment { presetId ->
+                2 -> PickRoutineFragment { presetId ->
                     selectedPresetId = presetId
                 }
                 else -> throw IllegalArgumentException()
@@ -77,7 +75,7 @@ class OnboardingActivity : AppCompatActivity() {
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                binding.btnNext.text = if (position == 3) "Get Started" else "Next"
+                binding.btnNext.text = if (position == 2) "Get Started" else "Next"
             }
         })
     }
@@ -143,7 +141,6 @@ class OnboardingActivity : AppCompatActivity() {
                 val chip = Chip(requireContext()).apply {
                     text = "${preset.emoji} ${preset.name}"
                     isCheckable = true
-                    // ChipCornerRadius deprecation fixed via ShapeAppearanceModel
                     shapeAppearanceModel = shapeAppearanceModel.toBuilder()
                         .setAllCornerSizes(999f)
                         .build()

@@ -133,7 +133,7 @@ interface ActivityEventDao {
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 
-@Database(entities = [ActivityEvent::class], version = 4, exportSchema = false)
+@Database(entities = [ActivityEvent::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun activityEventDao(): ActivityEventDao
@@ -148,7 +148,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "adhd_assistant_db"
                 )
-                    // FIXED: Explicitly tell Room to drop the old tables when resetting the schema
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }

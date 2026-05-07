@@ -15,7 +15,6 @@ import java.io.IOException
 import com.example.adhdassistant.domain.ResolvedRoutine
 
 // ─── DataStore singleton ──────────────────────────────────────────────────────
-// V2 naming prevents conflicts with the legacy ConfigManager file
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "adhd_settings_v2")
 
 class ConfigRepository(private val context: Context) {
@@ -88,7 +87,8 @@ class ConfigRepository(private val context: Context) {
             emoji = activeRoutine.emoji,
             schedule = activeRoutine.schedule ?: RoutineSchedule.DaysOfWeek(setOf(1, 2, 3, 4, 5, 6, 7)),
             isManuallyActive = activeRoutine.isManuallyActive,
-            inheritanceChain = listOf(activeRoutine.name)
+            inheritanceChain = listOf(activeRoutine.name),
+            locationName = activeRoutine.locationName
         )
     }
 

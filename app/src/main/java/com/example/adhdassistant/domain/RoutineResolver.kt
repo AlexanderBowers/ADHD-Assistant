@@ -13,20 +13,6 @@ sealed class RoutineError {
 
 // ─── Resolver ─────────────────────────────────────────────────────────────────
 
-/**
- * Resolves a Routine through its full inheritance chain into a concrete ResolvedRoutine.
- * Pure Kotlin — no Android dependencies, fully unit-testable.
- *
- * Field resolution (for all fields except excludedApps):
- *   Walk root → child. First non-null value encountered wins.
- *   A child's non-null value always overrides any ancestor.
- *
- * excludedAppOverrides resolution:
- *   Walk root → child, accumulating a running Set<String>:
- *     result = (result + level.add) - level.remove
- *   A level with null overrides passes the set through unchanged.
- *   This lets a child add apps, remove apps, do both, or leave the list alone.
- */
 object RoutineResolver {
 
     // ─── Primary API ─────────────────────────────────────────────────────────
@@ -102,24 +88,20 @@ object RoutineResolver {
     ): ResolvedRoutine? {
         val root = chain.first()
 
-        // Validate root completeness
         val missing = missingRootFields(root)
         if (missing.isNotEmpty()) {
             errors.add(RoutineError.IncompleteRoot(root.name, missing))
             return null
         }
 
-        // Accumulate each field, applying child overrides as we walk down
         var startHour             = root.startHour!!
         var endHour               = root.endHour!!
         var alertThresholdMinutes = root.alertThresholdMinutes!!
         var schedule              = root.schedule!!
 
-        // Excluded apps: start empty, apply each level's delta in order
         var excludedApps = emptySet<String>()
         root.excludedAppOverrides?.let { excludedApps = applyDelta(excludedApps, it) }
 
-        // On-open prompt apps: same delta accumulation as excluded apps
         var onOpenPromptPackages = emptySet<String>()
         root.onOpenPromptOverrides?.let { onOpenPromptPackages = applyDelta(onOpenPromptPackages, it) }
 
@@ -144,15 +126,11 @@ object RoutineResolver {
             onOpenPromptPackages  = onOpenPromptPackages,
             schedule              = schedule,
             isManuallyActive      = leaf.isManuallyActive,
-            inheritanceChain      = chain.map { it.name }
+            inheritanceChain      = chain.map { it.name },
+            locationName          = leaf.locationName
         )
     }
 
-    /**
-     * Apply a single level's delta to the running excluded-apps set.
-     * Add first, then remove — so a level can't accidentally re-add
-     * something it also removes.
-     */
     private fun applyDelta(
         current: Set<String>,
         overrides: ExcludedAppOverrides
@@ -212,7 +190,7 @@ object RoutineMerger {
     }
 
     fun resolveAndMerge(
-        allRoutines: List<Routine>,
+        allRoutines: List<com.example.adhdassistant.config.Routine>,
         currentDayOfWeek: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK),
         currentHour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     ): MergedRoutine? {

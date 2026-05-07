@@ -50,6 +50,7 @@ class IntentionListActivity : AppCompatActivity() {
         }
 
         intentionAdapter = IntentionAdapter(
+            onCompleteClick = { item -> completeIntention(item) },
             onDeleteClick = { item -> confirmDelete(item) },
             onDragStart = { viewHolder -> itemTouchHelper?.startDrag(viewHolder) }
         )
@@ -72,7 +73,6 @@ class IntentionListActivity : AppCompatActivity() {
     private fun setupDragAndDrop() {
         val callback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             override fun onMove(r: RecyclerView, src: RecyclerView.ViewHolder, tgt: RecyclerView.ViewHolder): Boolean {
-                // Fixed AdapterPosition Deprecation
                 intentionAdapter.moveItem(src.bindingAdapterPosition, tgt.bindingAdapterPosition)
                 return true
             }
@@ -122,6 +122,19 @@ class IntentionListActivity : AppCompatActivity() {
         input.requestFocus()
     }
 
+    private fun completeIntention(item: IntentionItem) {
+        val pos = intentionAdapter.items.indexOf(item)
+        if (pos == -1) return
+        val removed = intentionAdapter.removeAt(pos) ?: return
+        saveList()
+
+        Snackbar.make(binding.root, "Intention completed ✓", Snackbar.LENGTH_LONG)
+            .setAction("Undo") {
+                intentionAdapter.insertAt(pos, removed)
+                saveList()
+            }.show()
+    }
+
     private fun confirmDelete(item: IntentionItem) {
         val pos = intentionAdapter.items.indexOf(item)
         if (pos == -1) return
@@ -142,6 +155,7 @@ class IntentionListActivity : AppCompatActivity() {
     // ─── Adapter ──────────────────────────────────────────────────────────────
 
     inner class IntentionAdapter(
+        val onCompleteClick: (IntentionItem) -> Unit,
         val onDeleteClick: (IntentionItem) -> Unit,
         val onDragStart: (RecyclerView.ViewHolder) -> Unit
     ) : RecyclerView.Adapter<IntentionAdapter.IntentionViewHolder>() {
@@ -170,6 +184,7 @@ class IntentionListActivity : AppCompatActivity() {
             @Suppress("ClickableViewAccessibility")
             fun bind(intention: IntentionItem) {
                 b.intentionNameText.text = intention.text
+                b.btnCompleteIntention.setOnClickListener { onCompleteClick(intention) }
                 b.btnDeleteIntention.setOnClickListener { onDeleteClick(intention) }
                 b.imgDragHandle.setOnTouchListener { _, event ->
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) onDragStart(this)

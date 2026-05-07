@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.adhdassistant.ui.routines.EditRoutineActivity.Companion.EXTRA_PROFILE_ID
 
 class RoutineListActivity : AppCompatActivity() {
 

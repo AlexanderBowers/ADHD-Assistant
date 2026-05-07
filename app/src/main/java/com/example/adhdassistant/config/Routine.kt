@@ -4,18 +4,6 @@ import kotlinx.serialization.Serializable
 
 // ─── Excluded App Delta ───────────────────────────────────────────────────────
 
-/**
- * Describes how a routine modifies its inherited excluded-app list.
- *
- * Both root and child routines use this. For a root, [remove] is a no-op
- * since there's nothing inherited to remove — the resolver starts from an
- * empty set and applies [add], giving the root its base list.
- *
- * For a child, the resolver takes the parent's resolved list and applies:
- *   result = (inherited + add) - remove
- *
- * null on the Routine means "inherit unchanged, no modifications."
- */
 @Serializable
 data class ExcludedAppOverrides(
     val add: Set<String> = emptySet(),
@@ -31,18 +19,6 @@ data class ExcludedAppOverrides(
 
 // ─── Routine ──────────────────────────────────────────────────────────────────
 
-/**
- * A named tracking configuration. Can inherit from a parent routine.
- *
- * All setting fields are nullable. null = "inherit from parent."
- * Root routines (parentId == null) must have all fields non-null — the UI enforces this.
- *
- * The parent is a template: a child can override any field, including
- * adding and removing individual excluded apps from the inherited list.
- *
- * Inheritance is resolved by RoutineResolver into a ResolvedRoutine (no nulls)
- * before the service ever sees it.
- */
 @Serializable
 data class Routine(
     val id: Long = System.currentTimeMillis(),
@@ -56,32 +32,13 @@ data class Routine(
     val alertThresholdMinutes: Int? = null,
     val schedule: RoutineSchedule? = null,
 
-    /**
-     * null  → inherit parent's list unchanged
-     * non-null → apply delta: (inherited + add) - remove
-     *
-     * On a root routine, [remove] is ignored (nothing to remove).
-     * A child that wants to clear ALL inherited exclusions can set
-     * remove = <all parent packages>, or more practically, the UI
-     * offers a "clear all inherited" toggle that populates [remove]
-     * with the parent's full resolved list at save time.
-     */
     val excludedAppOverrides: ExcludedAppOverrides? = null,
-
-    /**
-     * Apps that show an immediate intention check-in the moment they appear
-     * in the foreground (fires at session start, not after the usage threshold).
-     *
-     * null  → inherit parent's list unchanged
-     * non-null → apply delta: (inherited + add) - remove
-     *
-     * Example: add "com.chess" so the user is asked about their intention
-     * the instant Chess opens, before they get absorbed.
-     */
     val onOpenPromptOverrides: ExcludedAppOverrides? = null,
 
     // ── Not inherited — each routine's manual toggle is independent ──────────
-    val isManuallyActive: Boolean = false
+    val isManuallyActive: Boolean = false,
+
+    val locationName: String? = null
 ) {
     val isRoot: Boolean get() = parentId == null
 
@@ -99,10 +56,6 @@ enum class RoutineField { START_HOUR, END_HOUR, THRESHOLD, EXCLUDED_APPS, SCHEDU
 
 // ─── Resolved Routine ─────────────────────────────────────────────────────────
 
-/**
- * A Routine after its full inheritance chain has been applied — no nulls.
- * This is what the service, stats screen, and merge logic work with.
- */
 data class ResolvedRoutine(
     val id: Long,
     val name: String,
@@ -114,7 +67,7 @@ data class ResolvedRoutine(
     val onOpenPromptPackages: Set<String>,
     val schedule: RoutineSchedule,
     val isManuallyActive: Boolean,
-    val inheritanceChain: List<String>   // Root-first, e.g. ["Weekday", "Monday"]
+    val inheritanceChain: List<String>
 ) {
     val inheritancePath: String get() = inheritanceChain.joinToString(" → ")
 
@@ -178,7 +131,6 @@ object RoutinePresets {
         excludedAppOverrides = ExcludedAppOverrides.adding("com.spotify.music")
     )
 
-    // Child: inherits Weekday, removes Netflix (no scrolling at work), adds Slack
     val WORK_HOURS = Routine(
         id = 200L, name = "Work Hours", emoji = "🖥️",
         parentId = WEEKDAY.id,
@@ -186,11 +138,10 @@ object RoutinePresets {
         schedule = RoutineSchedule.TimedDays(setOf(2,3,4,5,6), activateHour = 9),
         excludedAppOverrides = ExcludedAppOverrides(
             add    = setOf("com.slack", "com.microsoft.teams"),
-            remove = setOf("com.netflix")   // Don't let Netflix slide during work
+            remove = setOf("com.netflix")
         )
     )
 
-    // Child: inherits Weekday, just overrides threshold and day
     val MONDAY = Routine(
         id = 201L, name = "Monday", emoji = "😤",
         parentId = WEEKDAY.id,
@@ -198,7 +149,6 @@ object RoutinePresets {
         schedule = RoutineSchedule.DaysOfWeek(setOf(2))
     )
 
-    // Child: inherits Weekday, relaxes end time and threshold, keeps all exclusions
     val FRIDAY = Routine(
         id = 202L, name = "Friday", emoji = "🎉",
         parentId = WEEKDAY.id,
@@ -208,6 +158,5 @@ object RoutinePresets {
 
     val all = listOf(WEEKDAY, WEEKEND, EVERY_DAY, GYM, WORK_HOURS, MONDAY, FRIDAY)
 
-    /** Top-level presets shown on the onboarding routine picker (no parent). */
     val rootRoutines = listOf(WEEKDAY, WEEKEND, EVERY_DAY, GYM)
 }

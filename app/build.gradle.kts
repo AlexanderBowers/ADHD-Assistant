@@ -67,6 +67,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.cardview)
     implementation(libs.androidx.material3)
     // UI — Material 3
     implementation(libs.material)
