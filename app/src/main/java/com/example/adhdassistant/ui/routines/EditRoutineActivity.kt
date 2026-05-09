@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.config.Routine
 import com.example.adhdassistant.databinding.ActivityEditRoutineBinding
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -20,12 +21,27 @@ class EditRoutineActivity : AppCompatActivity() {
     private val configRepository
         get() = (application as ADHDApplication).configRepository
 
+    private var editingRoutineId: Long = -1L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEditRoutineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Save button that actually exists in your XML
+        editingRoutineId = intent.getLongExtra(EXTRA_PROFILE_ID, -1L)
+
+        if (editingRoutineId != -1L) {
+            lifecycleScope.launch {
+                val existing = configRepository.routineListFlow.first()
+                    .firstOrNull { it.id == editingRoutineId }
+                if (existing != null) {
+                    binding.tilRoutineName.editText?.setText(existing.name)
+                    binding.tilLocation.editText?.setText(existing.locationName ?: "")
+                    binding.sliderThreshold.value = (existing.alertThresholdMinutes ?: 5).toFloat()
+                }
+            }
+        }
+
         binding.btnSave.setOnClickListener {
             saveRoutine()
         }
@@ -45,7 +61,7 @@ class EditRoutineActivity : AppCompatActivity() {
         val thresholdMinutes = binding.sliderThreshold.value.toInt()
 
         val routine = Routine(
-            id = Random.nextLong(),
+            id = if (editingRoutineId != -1L) editingRoutineId else Random.nextLong(),
             name = name,
             emoji = "🧠",
             startHour = 8,
@@ -64,7 +80,7 @@ class EditRoutineActivity : AppCompatActivity() {
             configRepository.saveRoutine(routine)
             Toast.makeText(
                 this@EditRoutineActivity,
-                "Routine saved",
+                if (editingRoutineId != -1L) "Routine updated" else "Routine saved",
                 Toast.LENGTH_SHORT
             ).show()
             finish()

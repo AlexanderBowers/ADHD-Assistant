@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="ADHD Assistant"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/on_surface"
             android:textSize="28sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="#4D2A6A"
+            app:cardBackgroundColor="@color/primary_container"
             app:cardCornerRadius="16dp"
             android:visibility="gone">
 
@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Current Intention"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/on_primary_container"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -47,7 +47,7 @@
                     android:id="@+id/tvTopIntention"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/on_primary_container"
                     android:textSize="20sp"
                     android:layout_marginTop="8dp" />
 
@@ -55,7 +55,7 @@
                     android:id="@+id/tvIntentionMore"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#EEEEEE"
+                    android:textColor="@color/on_surface_variant"
                     android:textSize="14sp"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
@@ -91,21 +91,13 @@
             android:textSize="16sp" />
 
         <Button
-            android:id="@+id/btnBatteryHealth"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="24dp"
-            android:text="🔋  Battery Health" />
-
-        <Button
             android:id="@+id/btnTestInterrupt"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="24dp"
             android:text="🔧  DEV: Force Interrupt UI"
-            android:textColor="@color/error_red" />
+            android:textColor="@color/error" />
 
     </LinearLayout>
 </ScrollView>

@@ -133,7 +133,7 @@ interface ActivityEventDao {
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 
-@Database(entities = [ActivityEvent::class], version = 5, exportSchema = false)
+@Database(entities = [ActivityEvent::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun activityEventDao(): ActivityEventDao

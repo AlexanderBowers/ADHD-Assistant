@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.config.IntentionItem
@@ -54,6 +55,7 @@ class IntentionListActivity : AppCompatActivity() {
             onDeleteClick = { item -> confirmDelete(item) },
             onDragStart = { viewHolder -> itemTouchHelper?.startDrag(viewHolder) }
         )
+        binding.intentionRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.intentionRecyclerView.adapter = intentionAdapter
 
         setupDragAndDrop()

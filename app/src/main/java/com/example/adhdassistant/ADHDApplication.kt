@@ -5,6 +5,7 @@
 package com.example.adhdassistant
 
 import android.app.Application
+import androidx.appcompat.app.AppCompatDelegate
 import com.example.adhdassistant.config.ConfigRepository
 import com.example.adhdassistant.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +34,7 @@ class ADHDApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         pruneOldEvents()
     }
 
