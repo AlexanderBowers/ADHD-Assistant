@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name=".ADHDApplication"
@@ -62,6 +65,7 @@
         </service>
 
         <receiver android:name=".tracking.ActivityTransitionReceiver" android:exported="false" />
+        <receiver android:name=".content.GeofenceBroadcastReceiver" android:exported="false" />
 
     </application>
 </manifest>

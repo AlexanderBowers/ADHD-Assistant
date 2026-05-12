@@ -127,7 +127,9 @@ object RoutineResolver {
             schedule              = schedule,
             isManuallyActive      = leaf.isManuallyActive,
             inheritanceChain      = chain.map { it.name },
-            locationName          = leaf.locationName
+            locationName          = leaf.locationName,
+            locationLat           = leaf.locationLat,
+            locationLng           = leaf.locationLng
         )
     }
 

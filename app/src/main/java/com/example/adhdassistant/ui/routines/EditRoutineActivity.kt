@@ -2,8 +2,11 @@ package com.example.adhdassistant.ui.routines
 
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.adhdassistant.ADHDApplication
@@ -11,6 +14,7 @@ import com.example.adhdassistant.R
 import com.example.adhdassistant.config.Routine
 import com.example.adhdassistant.config.RoutineSchedule
 import com.example.adhdassistant.databinding.ActivityEditRoutineBinding
+import com.example.adhdassistant.ui.location.LocationPickerDialogFragment
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -31,6 +35,10 @@ class EditRoutineActivity : AppCompatActivity() {
     private var selectedEndHour: Int = 22
     private var selectedActivateHour: Int = 8
 
+    private var selectedLocationName: String? = null
+    private var selectedLocationLat: Double? = null
+    private var selectedLocationLng: Double? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEditRoutineBinding.inflate(layoutInflater)
@@ -41,6 +49,7 @@ class EditRoutineActivity : AppCompatActivity() {
         setupSlider()
         setupHourButtons()
         setupScheduleChips()
+        setupLocationPicker()
 
         if (editingRoutineId != -1L) {
             binding.btnDelete.visibility = View.VISIBLE
@@ -118,7 +127,10 @@ class EditRoutineActivity : AppCompatActivity() {
 
     private fun populateFrom(routine: Routine) {
         binding.tilRoutineName.editText?.setText(routine.name)
-        binding.tilLocation.editText?.setText(routine.locationName ?: "")
+        selectedLocationName = routine.locationName
+        selectedLocationLat  = routine.locationLat
+        selectedLocationLng  = routine.locationLng
+        updateLocationDisplay()
 
         routine.startHour?.let { selectedStartHour = it }
         routine.endHour?.let { selectedEndHour = it }
@@ -189,7 +201,9 @@ class EditRoutineActivity : AppCompatActivity() {
             schedule = buildSchedule(),
             isManuallyActive = false,
             parentId = null,
-            locationName = binding.tilLocation.editText?.text?.toString()?.takeIf { it.isNotBlank() }
+            locationName = selectedLocationName,
+            locationLat  = selectedLocationLat,
+            locationLng  = selectedLocationLng
         )
 
         lifecycleScope.launch {
@@ -201,6 +215,35 @@ class EditRoutineActivity : AppCompatActivity() {
             ).show()
             finish()
         }
+    }
+
+    private fun setupLocationPicker() {
+        updateLocationDisplay()
+        binding.btnPickLocation.setOnClickListener {
+            LocationPickerDialogFragment { picked ->
+                selectedLocationName = picked?.name
+                selectedLocationLat  = picked?.lat
+                selectedLocationLng  = picked?.lng
+                updateLocationDisplay()
+            }.show(supportFragmentManager, LocationPickerDialogFragment.TAG)
+        }
+    }
+
+    private fun updateLocationDisplay() {
+        val display = binding.tvLocationDisplay
+        if (selectedLocationName != null) {
+            display.text = selectedLocationName
+            display.setTextColor(resolveAttrColor(com.google.android.material.R.attr.colorOnSurface))
+        } else {
+            display.text = "No location set"
+            display.setTextColor(resolveAttrColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+        }
+    }
+
+    private fun resolveAttrColor(@AttrRes attr: Int): Int {
+        val tv = TypedValue()
+        theme.resolveAttribute(attr, tv, true)
+        return tv.data
     }
 
     private fun deleteRoutine() {
