@@ -1,33 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="32dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:text="Context is everything"
-        android:textColor="@color/text_primary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+        android:textColor="?attr/colorOnSurface" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
-        android:text="If you want routines to activate automatically when you get home (or to work), you can enable location access."
-        android:textAlignment="center"
-        android:textColor="@color/text_secondary"
-        android:textSize="16sp" />
+        android:text="Routines can activate automatically when you arrive at a specific place. Circle a location on the map, or skip this for now."
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnEnableLocation"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnSetLocation"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enable Location" />
+        android:layout_marginBottom="16dp"
+        android:text="Set Location on Map"
+        app:icon="@drawable/ic_my_location" />
+
+    <LinearLayout
+        android:id="@+id/layoutSelectedLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvSelectedLocationName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChangeLocation"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change" />
+
+    </LinearLayout>
 
 </LinearLayout>

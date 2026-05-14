@@ -1,9 +1,14 @@
 package com.example.adhdassistant.ui.routines
 
+import android.app.Activity.RESULT_OK
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.AttrRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.adhdassistant.ADHDApplication
@@ -11,6 +16,7 @@ import com.example.adhdassistant.R
 import com.example.adhdassistant.config.Routine
 import com.example.adhdassistant.config.RoutineSchedule
 import com.example.adhdassistant.databinding.ActivityEditRoutineBinding
+import com.example.adhdassistant.ui.location.MapPickerActivity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -31,6 +37,24 @@ class EditRoutineActivity : AppCompatActivity() {
     private var selectedEndHour: Int = 22
     private var selectedActivateHour: Int = 8
 
+    private var selectedLocationName: String? = null
+    private var selectedLocationLat: Double? = null
+    private var selectedLocationLng: Double? = null
+    private var selectedLocationRadius: Int? = null
+
+    private val mapPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            selectedLocationLat    = data.getDoubleExtra(MapPickerActivity.EXTRA_LAT, 0.0)
+            selectedLocationLng    = data.getDoubleExtra(MapPickerActivity.EXTRA_LNG, 0.0)
+            selectedLocationRadius = data.getIntExtra(MapPickerActivity.EXTRA_RADIUS, 200)
+            selectedLocationName   = data.getStringExtra(MapPickerActivity.EXTRA_NAME) ?: ""
+            updateLocationDisplay()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEditRoutineBinding.inflate(layoutInflater)
@@ -41,6 +65,7 @@ class EditRoutineActivity : AppCompatActivity() {
         setupSlider()
         setupHourButtons()
         setupScheduleChips()
+        setupLocationPicker()
 
         if (editingRoutineId != -1L) {
             binding.btnDelete.visibility = View.VISIBLE
@@ -118,7 +143,11 @@ class EditRoutineActivity : AppCompatActivity() {
 
     private fun populateFrom(routine: Routine) {
         binding.tilRoutineName.editText?.setText(routine.name)
-        binding.tilLocation.editText?.setText(routine.locationName ?: "")
+        selectedLocationName   = routine.locationName
+        selectedLocationLat    = routine.locationLat
+        selectedLocationLng    = routine.locationLng
+        selectedLocationRadius = routine.locationRadius
+        updateLocationDisplay()
 
         routine.startHour?.let { selectedStartHour = it }
         routine.endHour?.let { selectedEndHour = it }
@@ -189,7 +218,10 @@ class EditRoutineActivity : AppCompatActivity() {
             schedule = buildSchedule(),
             isManuallyActive = false,
             parentId = null,
-            locationName = binding.tilLocation.editText?.text?.toString()?.takeIf { it.isNotBlank() }
+            locationName   = selectedLocationName,
+            locationLat    = selectedLocationLat,
+            locationLng    = selectedLocationLng,
+            locationRadius = selectedLocationRadius
         )
 
         lifecycleScope.launch {
@@ -201,6 +233,36 @@ class EditRoutineActivity : AppCompatActivity() {
             ).show()
             finish()
         }
+    }
+
+    private fun setupLocationPicker() {
+        updateLocationDisplay()
+        binding.btnPickLocation.setOnClickListener { launchMapPicker() }
+    }
+
+    private fun launchMapPicker() {
+        val intent = Intent(this, MapPickerActivity::class.java)
+        selectedLocationLat?.let    { intent.putExtra(MapPickerActivity.EXTRA_INIT_LAT, it) }
+        selectedLocationLng?.let    { intent.putExtra(MapPickerActivity.EXTRA_INIT_LNG, it) }
+        selectedLocationRadius?.let { intent.putExtra(MapPickerActivity.EXTRA_INIT_RADIUS, it) }
+        mapPickerLauncher.launch(intent)
+    }
+
+    private fun updateLocationDisplay() {
+        val display = binding.tvLocationDisplay
+        if (selectedLocationName != null) {
+            display.text = selectedLocationName
+            display.setTextColor(resolveAttrColor(android.R.attr.textColorPrimary))
+        } else {
+            display.text = "No location set"
+            display.setTextColor(resolveAttrColor(android.R.attr.textColorSecondary))
+        }
+    }
+
+    private fun resolveAttrColor(@AttrRes attr: Int): Int {
+        val tv = TypedValue()
+        theme.resolveAttribute(attr, tv, true)
+        return tv.data
     }
 
     private fun deleteRoutine() {

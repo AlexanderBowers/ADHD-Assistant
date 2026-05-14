@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
 }
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
 
 android {
     namespace  = "com.example.adhdassistant"
@@ -17,6 +23,8 @@ android {
         targetSdk     = 36
         versionCode   = 1
         versionName   = "1.0.0"
+
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     signingConfigs {
@@ -96,8 +104,9 @@ dependencies {
     // Billing
     implementation(libs.billing.ktx)
 
-    // Background & Location (RESTORED)
+    // Background & Location
     implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
     implementation(libs.work.runtime.ktx)
 
     // Unit tests

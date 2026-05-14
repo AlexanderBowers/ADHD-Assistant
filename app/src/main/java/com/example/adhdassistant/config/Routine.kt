@@ -38,7 +38,10 @@ data class Routine(
     // ── Not inherited — each routine's manual toggle is independent ──────────
     val isManuallyActive: Boolean = false,
 
-    val locationName: String? = null
+    val locationName: String? = null,
+    val locationLat: Double? = null,
+    val locationLng: Double? = null,
+    val locationRadius: Int? = null
 ) {
     val isRoot: Boolean get() = parentId == null
 
@@ -67,7 +70,11 @@ data class ResolvedRoutine(
     val onOpenPromptPackages: Set<String>,
     val schedule: RoutineSchedule,
     val isManuallyActive: Boolean,
-    val inheritanceChain: List<String>
+    val inheritanceChain: List<String>,
+    val locationName: String? = null,
+    val locationLat: Double? = null,
+    val locationLng: Double? = null,
+    val locationRadius: Int? = null
 ) {
     val inheritancePath: String get() = inheritanceChain.joinToString(" → ")
 

@@ -21,7 +21,7 @@ object RoutineResolver {
         routine: Routine,
         allRoutines: List<Routine>,
         errors: MutableList<RoutineError> = mutableListOf()
-    ): ResolvedRoutine? {
+    ): com.example.adhdassistant.config.ResolvedRoutine? {
         val chain = buildChain(routine, allRoutines, errors) ?: return null
         return applyChain(chain, errors)
     }
@@ -85,7 +85,7 @@ object RoutineResolver {
     private fun applyChain(
         chain: List<Routine>,  // Root-first
         errors: MutableList<RoutineError>
-    ): ResolvedRoutine? {
+    ): com.example.adhdassistant.config.ResolvedRoutine? {
         val root = chain.first()
 
         val missing = missingRootFields(root)
@@ -115,7 +115,7 @@ object RoutineResolver {
         }
 
         val leaf = chain.last()
-        return ResolvedRoutine(
+        return com.example.adhdassistant.config.ResolvedRoutine(
             id                    = leaf.id,
             name                  = leaf.name,
             emoji                 = leaf.emoji,
@@ -127,7 +127,10 @@ object RoutineResolver {
             schedule              = schedule,
             isManuallyActive      = leaf.isManuallyActive,
             inheritanceChain      = chain.map { it.name },
-            locationName          = leaf.locationName
+            locationName          = leaf.locationName,
+            locationLat           = leaf.locationLat,
+            locationLng           = leaf.locationLng,
+            locationRadius        = leaf.locationRadius
         )
     }
 
@@ -178,7 +181,7 @@ object RoutineMerger {
         else hour >= start || hour < end
     }
 
-    fun merge(resolved: List<ResolvedRoutine>): MergedRoutine? {
+    fun merge(resolved: List<com.example.adhdassistant.config.ResolvedRoutine>): MergedRoutine? {
         if (resolved.isEmpty()) return null
         return MergedRoutine(
             activeRoutineNames    = resolved.map { it.name },

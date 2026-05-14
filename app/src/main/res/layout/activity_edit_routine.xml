@@ -98,25 +98,34 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="8dp"
                         android:text="Location (optional)"
                         android:textAppearance="?attr/textAppearanceLabelLarge"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilLocation"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="e.g. Office, Gym, Library">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/tvLocationDisplay"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapSentences"
-                            android:maxLines="1" />
+                            android:layout_weight="1"
+                            android:text="No location set"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
 
-                    </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPickLocation"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Choose" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

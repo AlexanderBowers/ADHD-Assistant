@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name=".ADHDApplication"
@@ -30,10 +33,15 @@
             </intent-filter>
         </activity>
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <activity android:name=".ui.onboarding.OnboardingActivity" />
         <activity android:name=".ui.settings.SettingsActivity" />
         <activity android:name=".ui.routines.RoutineListActivity" />
         <activity android:name=".ui.routines.EditRoutineActivity" />
+        <activity android:name=".ui.location.MapPickerActivity" />
         <activity android:name=".ui.intentions.IntentionListActivity" />
         <activity android:name=".ui.excluded.ExcludedAppsActivity" />
         <activity android:name=".ui.stats.StatsActivity" />
@@ -62,6 +70,7 @@
         </service>
 
         <receiver android:name=".tracking.ActivityTransitionReceiver" android:exported="false" />
+        <receiver android:name=".content.GeofenceBroadcastReceiver" android:exported="false" />
 
     </application>
 </manifest>

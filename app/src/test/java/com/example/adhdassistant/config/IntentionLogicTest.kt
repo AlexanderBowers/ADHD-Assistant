@@ -3,7 +3,7 @@ package com.example.adhdassistant.config
 import org.junit.Test
 import org.junit.Assert.*
 
-class ChoreLogicTest {
+class IntentionLogicTest {
 
     @Test
     fun `chore is not overdue before deadline`() {
