@@ -4,12 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.OutOfQuotaPolicy
-import androidx.work.WorkManager
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
-import com.example.adhdassistant.tracking.StartTrackerWorker
 import com.example.adhdassistant.tracking.UsageTrackingService
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
@@ -18,16 +15,16 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         if (geofencingEvent?.hasError() == true) return
 
         val transition = geofencingEvent?.geofenceTransition
+        val serviceIntent = Intent(context, UsageTrackingService::class.java)
 
         if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            Log.d("GeofenceReceiver", "Arrived Home. Enqueueing Tracker Start.")
-            val work = OneTimeWorkRequestBuilder<StartTrackerWorker>()
-                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                .build()
-            WorkManager.getInstance(context).enqueue(work)
+            Log.d("GeofenceReceiver", "Arrived Home. Starting Foreground Tracker.")
+            // Start the Foreground Service instantly
+            ContextCompat.startForegroundService(context, serviceIntent)
+
         } else if (transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             Log.d("GeofenceReceiver", "Left Home. Disabling Trackers.")
-            val serviceIntent = Intent(context, UsageTrackingService::class.java)
+            // Stop the service when you leave
             context.stopService(serviceIntent)
         }
     }

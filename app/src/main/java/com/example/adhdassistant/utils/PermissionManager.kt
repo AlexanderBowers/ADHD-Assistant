@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
@@ -18,6 +19,7 @@ class PermissionManager(private val context: Context) {
         const val REQUEST_LOCATION    = 101
         const val REQUEST_BACKGROUND  = 102
         const val REQUEST_NOTIFICATION = 103
+        const val REQUEST_OVERLAY     = 104
     }
 
     // ─── Usage Stats ──────────────────────────────────────────────────────────
@@ -88,14 +90,38 @@ class PermissionManager(private val context: Context) {
 
     // ─── Overlay (draw over other apps) ───────────────────────────────────────
 
-    fun hasOverlayPermission(): Boolean =
-        Settings.canDrawOverlays(context)
+    fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(context)
+        } else {
+            true // Automatically granted on devices older than Android 6.0
+        }
+    }
 
     fun requestOverlayPermission(activity: Activity) {
-        val intent = Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.fromParts("package", context.packageName, null)
-        )
-        activity.startActivity(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.fromParts("package", context.packageName, null)
+            )
+            // Using startActivityForResult is safer for some OEM variants when requesting overlay
+            activity.startActivityForResult(intent, REQUEST_OVERLAY)
+        }
+    }
+
+    /**
+     * Checks if the app has overlay permissions. If not, alerts the user and opens the
+     * specific settings page required to grant it.
+     */
+    fun checkAndRequestOverlayPermission(activity: Activity) {
+        if (!hasOverlayPermission()) {
+            Toast.makeText(
+                activity,
+                "Please allow ADHD Assistant to display over other apps to show alerts.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            requestOverlayPermission(activity)
+        }
     }
 }

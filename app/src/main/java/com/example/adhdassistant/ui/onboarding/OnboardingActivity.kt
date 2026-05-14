@@ -1,12 +1,16 @@
 package com.example.adhdassistant.ui.onboarding
-import com.example.adhdassistant.utils.PermissionManager
+
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -21,6 +25,7 @@ import com.example.adhdassistant.databinding.ActivityOnboardingBinding
 import com.example.adhdassistant.ui.location.MapPickerActivity
 import com.example.adhdassistant.ui.location.PickedLocation
 import com.example.adhdassistant.ui.main.MainActivity
+import com.example.adhdassistant.utils.PermissionManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -36,6 +41,14 @@ class OnboardingActivity : AppCompatActivity() {
     private var selectedLocationLat: Double? = null
     private var selectedLocationLng: Double? = null
     private var selectedLocationRadius: Int? = null
+
+    // Launcher to request POST_NOTIFICATIONS permission
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Proceed to main screen regardless of whether they granted it (though ideally they did!)
+        completeFinishOnboarding()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +77,19 @@ class OnboardingActivity : AppCompatActivity() {
                 finishOnboarding()
             }
         }
+
+        val permissionManager = PermissionManager(this)
+
+// Setup the Overlay Button
+        binding.btnGrantOverlay.setOnClickListener {
+            permissionManager.requestOverlayPermission(this)
+        }
+
+// Optional: Update the UI to show a checkmark if they already have it
+        if (permissionManager.hasOverlayPermission()) {
+            binding.btnGrantOverlay.text = "Display Permission Granted ✓"
+            binding.btnGrantOverlay.isEnabled = false
+        }
     }
 
     private fun setupViewPager() {
@@ -77,6 +103,7 @@ class OnboardingActivity : AppCompatActivity() {
                     selectedLocationName = picked?.name
                     selectedLocationLat  = picked?.lat
                     selectedLocationLng  = picked?.lng
+                    selectedLocationRadius = picked?.radiusMeters // Fix: Capture radius
                 }
                 3 -> PickRoutineFragment { presetId ->
                     selectedPresetId = presetId
@@ -93,6 +120,17 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun finishOnboarding() {
+        // Request Notification permission on Android 13+ before finishing
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                return
+            }
+        }
+        completeFinishOnboarding()
+    }
+
+    private fun completeFinishOnboarding() {
         lifecycleScope.launch {
             val selectedPreset = selectedPresetId
             val routine = if (selectedPreset != null) {
@@ -104,6 +142,7 @@ class OnboardingActivity : AppCompatActivity() {
                         locationRadius = selectedLocationRadius
                     )
             } else null
+
             configRepository.saveRoutine(
                 routine ?: ConfigRepository.buildDefaultRoutine().copy(
                     locationName   = selectedLocationName,
@@ -157,6 +196,22 @@ class OnboardingActivity : AppCompatActivity() {
             }
         }
 
+        private val locationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { grants ->
+            if (grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
+                openMapPicker()
+            } else {
+                com.google.android.material.snackbar.Snackbar.make(
+                    requireView(),
+                    "Location permission is needed to pick a location",
+                    com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                ).show()
+            }
+        }
+
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
@@ -168,6 +223,20 @@ class OnboardingActivity : AppCompatActivity() {
         }
 
         private fun launchMapPicker() {
+            val pm = PermissionManager(requireContext())
+            if (pm.hasLocationPermission()) {
+                openMapPicker()
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+
+        private fun openMapPicker() {
             mapPickerLauncher.launch(Intent(requireContext(), MapPickerActivity::class.java))
         }
 

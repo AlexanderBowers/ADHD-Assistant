@@ -1,304 +1,199 @@
 package com.example.adhdassistant.tracking
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.app.usage.UsageStatsManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.adhdassistant.R
 import com.example.adhdassistant.ADHDApplication
-import com.example.adhdassistant.data.ActivityEvent
-import com.example.adhdassistant.data.AppDatabase
-import com.example.adhdassistant.domain.TriggerClause
-import com.example.adhdassistant.domain.ResolvedRoutine
+import com.example.adhdassistant.R
 import com.example.adhdassistant.ui.alert.AlertActivity
-import com.example.adhdassistant.ui.AlertExplanationActivity
-import com.google.android.gms.location.ActivityRecognition
 import kotlinx.coroutines.*
-import kotlinx.serialization.json.Json
-import java.util.Calendar
 
 class UsageTrackingService : Service() {
 
+    // Creates a scope for our background loop that we can easily cancel later
+    private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
+    private val CHANNEL_ID = "FocusTrackingChannel"
+    private val ALERT_CHANNEL_ID = "FocusAlertChannel"
+    private val NOTIFICATION_ID = 1001
+
+    // State tracking
+    private var currentActivityType: Int = 4 // UNKNOWN default for ActivityRecognition
+    private var isSnoozed: Boolean = false
+    private var snoozeEndTime: Long = 0L
+
+    // Lazy load the repository to check excluded apps
+    private val configRepository by lazy {
+        (application as ADHDApplication).configRepository
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        // 1. Intercept specific actions (like Snooze from AlertActivity or Activity Updates)
+        when (intent?.action) {
+            ACTION_SNOOZE -> {
+                val minutes = intent.getIntExtra(EXTRA_SNOOZE_MINUTES, 15)
+                handleSnooze(minutes)
+                return START_STICKY
+            }
+            ACTION_UPDATE_ACTIVITY_STATE -> {
+                currentActivityType = intent.getIntExtra(EXTRA_ACTIVITY_TYPE, 4)
+                return START_STICKY
+            }
+        }
+
+        // 2. If it's a standard start, build the persistent notification
+        createNotificationChannels()
+        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("ADHD Assistant Active")
+            .setContentText("Monitoring your focus. You've got this!")
+            .setSmallIcon(R.mipmap.ic_launcher) // Update if you have a specific notification icon
+            .setOngoing(true)
+            .build()
+
+        // 3. Promote this service to a Foreground Service
+        startForeground(NOTIFICATION_ID, notification)
+
+        // 4. Start the exact 1-minute loop
+        startTrackingLoop()
+
+        return START_STICKY
+    }
+
+    private fun startTrackingLoop() {
+        serviceScope.launch {
+            while (isActive) {
+                // Only check usage if we aren't currently snoozed
+                if (isSnoozed && System.currentTimeMillis() < snoozeEndTime) {
+                    Log.d("UsageTracking", "Tracker is snoozed. Skipping check.")
+                } else {
+                    isSnoozed = false // Snooze expired
+                    performUsageCheck()
+                }
+
+                // Wait exactly 60 seconds before checking again
+                delay(60_000L)
+            }
+        }
+    }
+
+    private suspend fun performUsageCheck() {
+        Log.d("UsageTracking", "Performing 1-minute usage check...")
+
+        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val endTime = System.currentTimeMillis()
+        val startTime = endTime - 60_000L // Look at the last minute of usage
+
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        var currentForegroundApp: String? = null
+        val event = android.app.usage.UsageEvents.Event()
+
+        // Find the most recent app the user opened
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            if (event.eventType == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED) {
+                currentForegroundApp = event.packageName
+            }
+        }
+
+        if (currentForegroundApp != null) {
+            val excludedApps = configRepository.getExcludedApps()
+
+            // If the app is NOT excluded, and it's NOT our own app, trigger the alert
+            if (!excludedApps.contains(currentForegroundApp) && currentForegroundApp != packageName) {
+                Log.d("UsageTracking", "Distracting app detected: $currentForegroundApp")
+                triggerAlert(currentForegroundApp)
+            }
+        }
+    }
+
+    private fun triggerAlert(distractingApp: String) {
+        val alertIntent = Intent(this, AlertActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            putExtra(AlertActivity.EXTRA_APP_PACKAGE, distractingApp)
+        }
+
+        // Wrap it in a PendingIntent for the Full-Screen Notification
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            alertIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Fire a High-Priority Notification with a Full-Screen Intent
+        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Focus Check!")
+            .setContentText("Are you still doing what you intended to do?")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setFullScreenIntent(pendingIntent, true) // TRUE forces the UI to pop up
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1002, notification)
+    }
+
+    private fun handleSnooze(minutes: Int) {
+        isSnoozed = true
+        snoozeEndTime = System.currentTimeMillis() + (minutes * 60 * 1000L)
+        Log.d("UsageTracking", "Tracker snoozed for $minutes minutes until $snoozeEndTime")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+
+    private fun createNotificationChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NotificationManager::class.java)
+
+            // Channel 1: The quiet, persistent background tracker
+            val trackingChannel = NotificationChannel(
+                CHANNEL_ID,
+                "Focus Tracking",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            manager.createNotificationChannel(trackingChannel)
+
+            // Channel 2: The loud, screen-waking alert channel
+            val alertChannel = NotificationChannel(
+                ALERT_CHANNEL_ID,
+                "Focus Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Used to interrupt you when you are distracted"
+            }
+            manager.createNotificationChannel(alertChannel)
+        }
+    }
+
     companion object {
-        const val CHANNEL_ID = "adhd_tracking_channel"
-        const val NOTIFICATION_ID = 1001
-        private const val CHECK_INTERVAL_MS = 30_000L
-        private const val SNOOZE_EXTRA = "snooze_minutes"
-        private const val TAG = "UsageTrackingService"
-        private const val GRACE_PERIOD_MS = 90_000L
+        const val ACTION_SNOOZE = "ACTION_SNOOZE"
+        const val EXTRA_SNOOZE_MINUTES = "extra_snooze_minutes"
 
         const val ACTION_UPDATE_ACTIVITY_STATE = "com.example.adhdassistant.UPDATE_ACTIVITY_STATE"
         const val EXTRA_ACTIVITY_TYPE = "activity_type"
         const val EXTRA_ACTIVITY_CONFIDENCE = "activity_confidence"
 
-        fun snoozeIntent(context: android.content.Context, minutes: Int): Intent =
-            Intent(context, UsageTrackingService::class.java).apply {
-                putExtra(SNOOZE_EXTRA, minutes)
+        fun snoozeIntent(context: Context, minutes: Int): Intent {
+            return Intent(context, UsageTrackingService::class.java).apply {
+                action = ACTION_SNOOZE
+                putExtra(EXTRA_SNOOZE_MINUTES, minutes)
             }
-    }
-
-    private val configRepository get() = (applicationContext as ADHDApplication).configRepository
-    private lateinit var database: AppDatabase
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    private val heuristicsEngine = MovementHeuristicsEngine()
-    private var isUserMoving = true
-    private var activityRecognitionPendingIntent: PendingIntent? = null
-
-    private var continuousUsageStartTime = 0L
-    private var isCurrentlyUsingPhone = false
-    private var lastForegroundPackage: String? = null
-    private var snoozedUntilMs = 0L
-    private var trackingJob: Job? = null
-    private var savedPackage: String? = null
-    private var savedUsageStartTime: Long = 0L
-    private var savedSessionEndMs: Long = 0L
-
-    override fun onCreate() {
-        super.onCreate()
-        database = AppDatabase.getDatabase(applicationContext)
-        createNotificationChannel()
-
-        val intent = Intent(this, ActivityTransitionReceiver::class.java)
-        activityRecognitionPendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-        )
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_UPDATE_ACTIVITY_STATE) {
-            val type = intent.getIntExtra(EXTRA_ACTIVITY_TYPE, -1)
-            val conf = intent.getIntExtra(EXTRA_ACTIVITY_CONFIDENCE, 0)
-            if (type != -1) {
-                val trulyStill = heuristicsEngine.processNewState(type, conf)
-                isUserMoving = !trulyStill
-            }
-            return START_STICKY
-        }
-
-        val snoozeMinutes = intent?.getIntExtra(SNOOZE_EXTRA, 0) ?: 0
-        if (snoozeMinutes > 0) {
-            snoozedUntilMs = System.currentTimeMillis() + (snoozeMinutes * 60_000L)
-            return START_STICKY
-        }
-
-        startForegroundCompat()
-        startTracking()
-        return START_STICKY
-    }
-
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    override fun onDestroy() {
-        super.onDestroy()
-        trackingJob?.cancel()
-        serviceScope.cancel()
-        activityRecognitionPendingIntent?.let {
-            try {
-                ActivityRecognition.getClient(this).removeActivityUpdates(it)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to remove activity updates", e)
-            }
-        }
-    }
-
-    private fun startForegroundCompat() {
-        val notification = buildNotification()
-        if (Build.VERSION.SDK_INT >= 29) {
-            startForeground(NOTIFICATION_ID, notification,
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
-        }
-    }
-
-    private fun buildNotification(): Notification {
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.status_active))
-            .setSmallIcon(R.drawable.ic_notification)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setSilent(true)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID, "Focus Tracking", NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Keeps focus tracking active in the background"
-                setShowBadge(false)
-                enableLights(false)
-                enableVibration(false)
-            }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
-    }
-
-    private fun startTracking() {
-        trackingJob?.cancel()
-
-        try {
-            ActivityRecognition.getClient(this)
-                .requestActivityUpdates(10_000L, activityRecognitionPendingIntent!!)
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Missing Activity Recognition permission", e)
-        }
-
-        trackingJob = serviceScope.launch {
-            while (isActive) {
-                try { tick() } catch (e: Exception) { Log.e(TAG, "Error", e) }
-                delay(CHECK_INTERVAL_MS)
-            }
-        }
-    }
-
-    private suspend fun tick() {
-        if (System.currentTimeMillis() < snoozedUntilMs) return
-
-        val routine = configRepository.getActiveResolvedRoutine() ?: return
-
-        if (!isWithinActiveHours(routine.startHour, routine.endHour)) {
-            resetTracking()
-            heuristicsEngine.resetBuffer()
-            return
-        }
-
-        val foregroundPackage = getForegroundPackage()
-
-        if (foregroundPackage == null) {
-            resetTracking(clearSaved = false)
-            return
-        }
-
-        if (foregroundPackage == packageName) return
-
-        if (configRepository.isProVersion() && routine.excludedApps.contains(foregroundPackage)) {
-            resetTracking()
-            return
-        }
-
-        val now = System.currentTimeMillis()
-
-        if (!isCurrentlyUsingPhone || foregroundPackage != lastForegroundPackage) {
-            if (isCurrentlyUsingPhone && lastForegroundPackage != null) {
-                savedPackage        = lastForegroundPackage
-                savedUsageStartTime = continuousUsageStartTime
-                savedSessionEndMs   = now
-            }
-
-            isCurrentlyUsingPhone = true
-            lastForegroundPackage = foregroundPackage
-
-            val resuming = foregroundPackage == savedPackage && (now - savedSessionEndMs) < GRACE_PERIOD_MS
-            if (resuming) {
-                val accumulatedMs        = savedSessionEndMs - savedUsageStartTime
-                continuousUsageStartTime = now - accumulatedMs
-            } else {
-                continuousUsageStartTime = now
-            }
-
-            if (!resuming && foregroundPackage in routine.onOpenPromptPackages) {
-                triggerAlert(foregroundPackage, 0L, routine, AlertActivity.TRIGGER_TYPE_ON_OPEN)
-            }
-        } else {
-            val durationMs  = now - continuousUsageStartTime
-            val thresholdMs = routine.alertThresholdMinutes * 60_000L
-
-            if (durationMs >= thresholdMs) {
-                triggerAlert(foregroundPackage, durationMs, routine, AlertActivity.TRIGGER_TYPE_THRESHOLD)
-                resetTracking()
-            }
-        }
-    }
-
-    private fun resetTracking(clearSaved: Boolean = true) {
-        isCurrentlyUsingPhone = false
-        continuousUsageStartTime = 0L
-        lastForegroundPackage = null
-        if (clearSaved) {
-            savedPackage        = null
-            savedUsageStartTime = 0L
-            savedSessionEndMs   = 0L
-        }
-    }
-
-    private fun getForegroundPackage(): String? {
-        return try {
-            val usm = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-            val now = System.currentTimeMillis()
-            val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 10_000L, now)
-            stats?.filter { it.lastTimeUsed > 0 }
-                ?.maxByOrNull { it.lastTimeUsed }
-                ?.packageName
-                ?.takeIf { it.isNotEmpty() }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private suspend fun triggerAlert(
-        packageName: String,
-        durationMs: Long,
-        routine: ResolvedRoutine,
-        triggerType: String = AlertActivity.TRIGGER_TYPE_THRESHOLD
-    ) {
-        val clause = if (triggerType == AlertActivity.TRIGGER_TYPE_ON_OPEN) {
-            TriggerClause.OnOpen(routineId = routine.id, routineName = routine.name)
-        } else {
-            TriggerClause.ContinuousUsage(thresholdMinutes = routine.alertThresholdMinutes, routineId = routine.id, routineName = routine.name)
-        }
-
-        val event = ActivityEvent(
-            activeRoutineIds = Json.encodeToString(listOf(routine.id)),
-            activeRoutineNames = Json.encodeToString(listOf(routine.name)),
-            triggeringRoutineId = routine.id,
-            triggeringRoutineName = routine.name,
-            triggerClause = clause.toJson(),
-            timestamp = System.currentTimeMillis(),
-            appPackage = packageName,
-            durationMs = durationMs,
-            actionTaken = "TRIGGERED"
-        )
-        database.activityEventDao().insertEvent(event)
-
-        val bundle = AlertTriggerBundle(
-            routineId         = routine.id,
-            routineName       = routine.name,
-            locationName      = routine.locationName ?: routine.name,
-            accumulatedTimeMs = durationMs,
-            thresholdMs       = routine.alertThresholdMinutes * 60_000L,
-            distractingApp    = packageName,
-            requiresMovement  = true,
-            userWasStill      = !isUserMoving,
-            allowedAppWasOpen = false
-        )
-
-        val alertIntent = Intent(this, AlertExplanationActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra(AlertExplanationActivity.EXTRA_BUNDLE, bundle)
-        }
-        startActivity(alertIntent)
-    }
-
-    private fun isWithinActiveHours(startHour: Int, endHour: Int): Boolean {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        return if (startHour <= endHour) {
-            hour in startHour until endHour
-        } else {
-            hour >= startHour || hour < endHour
         }
     }
 }
