@@ -1,215 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutAlert"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <!-- Alert content — fades out when user taps "wrapping up" -->
-    <ScrollView
-        android:id="@+id/layoutAlert"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="64dp"
+        android:paddingBottom="40dp"
+        android:gravity="center_horizontal">
 
+        <TextView
+            android:id="@+id/tvEmoji"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="52sp" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface" />
+
+        <TextView
+            android:id="@+id/tvMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="16sp"
+            android:textColor="@color/on_surface_variant"
+            android:lineSpacingMultiplier="1.4"
+            android:gravity="center" />
+
+        <!-- Intention card — shown only if an intention is set -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardIntention"
+            style="@style/Widget.ADHDAssistant.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/intentions_on_alert"
+                    android:textSize="12sp"
+                    android:textColor="@color/on_surface_variant"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/tvIntentionText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="16sp"
+                    android:textColor="@color/on_surface"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── Four main action buttons ───────────────────────────── -->
         <LinearLayout
+            android:id="@+id/layoutButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="64dp"
-            android:paddingBottom="40dp"
-            android:gravity="center_horizontal">
+            android:layout_marginTop="36dp">
 
-            <TextView
-                android:id="@+id/tvEmoji"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="52sp" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface" />
-
-            <TextView
-                android:id="@+id/tvMessage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="16sp"
-                android:textColor="@color/on_surface_variant"
-                android:lineSpacingMultiplier="1.4"
-                android:gravity="center" />
-
-            <!-- Intention card — shown only if an intention is set -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardIntention"
-                style="@style/Widget.ADHDAssistant.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/intentions_on_alert"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-
-                    <TextView
-                        android:id="@+id/tvIntentionText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_surface"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- "What brought you here?" chip group -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:text="@string/alert_grounding_label"
-                android:textSize="13sp"
-                android:textColor="@color/on_surface_variant" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupGrounding"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:singleSelection="false" />
-
-            <!-- Action buttons -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDone"
+                android:id="@+id/btnThankYou"
                 style="@style/Widget.ADHDAssistant.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:text="@string/alert_btn_done" />
+                android:text="@string/alert_btn_thank_you" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnUseful"
+                android:id="@+id/btnRelevant"
                 style="@style/Widget.ADHDAssistant.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/alert_btn_useful" />
+                android:text="@string/alert_btn_relevant" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnContinue"
+                android:id="@+id/btnIntentionDone"
+                style="@style/Widget.ADHDAssistant.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/alert_btn_intention_done" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnIgnore"
                 style="@style/Widget.ADHDAssistant.Button.Text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@string/alert_btn_continue" />
+                android:text="@string/alert_btn_ignore" />
 
         </LinearLayout>
-    </ScrollView>
 
-    <!-- Grounding moment — slides in after user taps "wrapping up" -->
-    <ScrollView
-        android:id="@+id/layoutGrounding"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:fillViewport="true">
-
+        <!-- ── Intentions completion panel (hidden until btn3 tapped) ── -->
         <LinearLayout
+            android:id="@+id/layoutIntentions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="80dp"
-            android:paddingBottom="40dp"
-            android:gravity="center_horizontal">
+            android:layout_marginTop="36dp"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/grounding_emoji"
-                android:textSize="52sp" />
+                android:text="@string/alert_intentions_congrats_emoji"
+                android:textSize="40sp"
+                android:layout_gravity="center_horizontal" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/grounding_title"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface" />
-
-            <TextView
-                android:id="@+id/tvGroundingMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textSize="16sp"
-                android:textColor="@color/on_surface_variant"
-                android:lineSpacingMultiplier="1.4"
+                android:layout_marginTop="10dp"
+                android:text="@string/alert_intentions_congrats"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
                 android:gravity="center" />
 
-            <!-- Next intention prompt — shown only if intention is set -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardGroundingIntention"
-                style="@style/Widget.ADHDAssistant.Card"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:visibility="gone">
+                android:layout_marginTop="6dp"
+                android:text="@string/alert_intentions_prompt"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_variant"
+                android:gravity="center" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+            <!-- Dynamically populated with intention rows -->
+            <LinearLayout
+                android:id="@+id/containerIntentionsList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/grounding_top_intention"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface_variant"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-
-                    <TextView
-                        android:id="@+id/tvGroundingIntention"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_surface"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/tvNoIntentions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/alert_intentions_empty"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_variant"
+                android:gravity="center"
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGroundingDone"
-                style="@style/Widget.ADHDAssistant.Button"
+                android:id="@+id/btnIntentionsBack"
+                style="@style/Widget.ADHDAssistant.Button.Text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="@string/grounding_cta" />
+                android:layout_marginTop="16dp"
+                android:text="@string/alert_btn_back" />
 
         </LinearLayout>
-    </ScrollView>
 
-</FrameLayout>
+        <!-- ── Ignore timer panel (hidden until btn4 tapped) ──────── -->
+        <LinearLayout
+            android:id="@+id/layoutIgnore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="36dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/alert_ignore_label"
+                android:textSize="16sp"
+                android:textColor="@color/on_surface"
+                android:gravity="center"
+                android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupIgnore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:singleSelection="true"
+                app:selectionRequired="true" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnIgnoreBack"
+                style="@style/Widget.ADHDAssistant.Button.Text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/alert_btn_back" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -27,8 +27,6 @@ class UsageTrackingService : Service() {
 
     // State tracking
     private var currentActivityType: Int = 4 // UNKNOWN default for ActivityRecognition
-    private var isSnoozed: Boolean = false
-    private var snoozeEndTime: Long = 0L
 
     // Lazy load the repository to check excluded apps
     private val configRepository by lazy {
@@ -43,7 +41,9 @@ class UsageTrackingService : Service() {
         when (intent?.action) {
             ACTION_SNOOZE -> {
                 val minutes = intent.getIntExtra(EXTRA_SNOOZE_MINUTES, 15)
-                handleSnooze(minutes)
+                val until = System.currentTimeMillis() + (minutes * 60_000L)
+                serviceScope.launch { configRepository.setSnoozedUntilMs(until) }
+                Log.d("UsageTracking", "Tracker snoozed for $minutes minutes until $until")
                 return START_STICKY
             }
             ACTION_UPDATE_ACTIVITY_STATE -> {
@@ -73,15 +73,12 @@ class UsageTrackingService : Service() {
     private fun startTrackingLoop() {
         serviceScope.launch {
             while (isActive) {
-                // Only check usage if we aren't currently snoozed
-                if (isSnoozed && System.currentTimeMillis() < snoozeEndTime) {
+                val snoozedUntil = configRepository.getSnoozedUntilMs()
+                if (System.currentTimeMillis() < snoozedUntil) {
                     Log.d("UsageTracking", "Tracker is snoozed. Skipping check.")
                 } else {
-                    isSnoozed = false // Snooze expired
                     performUsageCheck()
                 }
-
-                // Wait exactly 60 seconds before checking again
                 delay(60_000L)
             }
         }
@@ -109,10 +106,19 @@ class UsageTrackingService : Service() {
         if (currentForegroundApp != null) {
             val excludedApps = configRepository.getExcludedApps()
 
-            // If the app is NOT excluded, and it's NOT our own app, trigger the alert
-            if (!excludedApps.contains(currentForegroundApp) && currentForegroundApp != packageName) {
+            // Check per-app snooze (from "Ignore this app" on the alert screen)
+            val appSnoozedUntil = configRepository.getAppSnoozedUntil(currentForegroundApp)
+            val appIsSnoozed = System.currentTimeMillis() < appSnoozedUntil
+
+            // If the app is NOT excluded, NOT our own app, and NOT individually snoozed, trigger
+            if (!excludedApps.contains(currentForegroundApp)
+                && currentForegroundApp != packageName
+                && !appIsSnoozed
+            ) {
                 Log.d("UsageTracking", "Distracting app detected: $currentForegroundApp")
                 triggerAlert(currentForegroundApp)
+            } else if (appIsSnoozed) {
+                Log.d("UsageTracking", "App $currentForegroundApp is individually snoozed. Skipping.")
             }
         }
     }
@@ -144,12 +150,6 @@ class UsageTrackingService : Service() {
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(1002, notification)
-    }
-
-    private fun handleSnooze(minutes: Int) {
-        isSnoozed = true
-        snoozeEndTime = System.currentTimeMillis() + (minutes * 60 * 1000L)
-        Log.d("UsageTracking", "Tracker snoozed for $minutes minutes until $snoozeEndTime")
     }
 
     override fun onDestroy() {

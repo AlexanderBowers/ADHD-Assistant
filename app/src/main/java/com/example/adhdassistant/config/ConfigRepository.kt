@@ -26,6 +26,8 @@ class ConfigRepository(private val context: Context) {
         val LAST_SUMMARY_NOTIFICATION_MS = longPreferencesKey("last_summary_notification_ms")
         val ADAPTIVE_THRESHOLD_STATE = stringPreferencesKey("adaptive_threshold_state")
         val EXCLUDED_APPS = stringSetPreferencesKey("excluded_apps")
+        val SNOOZED_UNTIL_MS = longPreferencesKey("snoozed_until_ms")
+        val PER_APP_SNOOZE_JSON = stringPreferencesKey("per_app_snooze_json")
 
         val ROUTINE_LIST = stringPreferencesKey("profile_list")
         val INTENTION_LIST = stringPreferencesKey("chore_list")
@@ -51,6 +53,32 @@ class ConfigRepository(private val context: Context) {
 
     suspend fun getExcludedApps(): Set<String> = dataStore.data.map { it[Keys.EXCLUDED_APPS] ?: emptySet() }.first()
     suspend fun setExcludedApps(apps: Set<String>) { dataStore.edit { it[Keys.EXCLUDED_APPS] = apps } }
+
+    suspend fun getSnoozedUntilMs(): Long = dataStore.data.first()[Keys.SNOOZED_UNTIL_MS] ?: 0L
+    suspend fun setSnoozedUntilMs(untilMs: Long) { dataStore.edit { it[Keys.SNOOZED_UNTIL_MS] = untilMs } }
+
+    /** Returns the per-app snooze map (packageName -> expiryMs). Expired entries are not filtered here. */
+    private suspend fun getPerAppSnoozeMap(): MutableMap<String, Long> {
+        val json = dataStore.data.first()[Keys.PER_APP_SNOOZE_JSON] ?: return mutableMapOf()
+        return runCatching { Json.decodeFromString<Map<String, Long>>(json).toMutableMap() }
+            .getOrDefault(mutableMapOf())
+    }
+
+    /** Returns the snooze expiry for a specific package, or 0 if not snoozed. */
+    suspend fun getAppSnoozedUntil(packageName: String): Long =
+        getPerAppSnoozeMap()[packageName] ?: 0L
+
+    /** Sets a per-app snooze expiry. Pass 0 to clear. */
+    suspend fun setAppSnoozedUntil(packageName: String, untilMs: Long) {
+        dataStore.edit { prefs ->
+            val json = prefs[Keys.PER_APP_SNOOZE_JSON]
+            val map = runCatching {
+                Json.decodeFromString<Map<String, Long>>(json ?: "{}").toMutableMap()
+            }.getOrDefault(mutableMapOf())
+            if (untilMs == 0L) map.remove(packageName) else map[packageName] = untilMs
+            prefs[Keys.PER_APP_SNOOZE_JSON] = Json.encodeToString(map)
+        }
+    }
 
     // ─── Routine & Intention Flows ────────────────────────────────────────────
     val routineListFlow: Flow<List<Routine>> = dataStore.data

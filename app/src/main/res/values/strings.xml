@@ -47,9 +47,20 @@
     <string name="alert_chip_social">Catching up</string>
 
     <!-- Action buttons — zero judgment, present tense, positive framing -->
-    <string name="alert_btn_done">Alright, wrapping up 👍</string>
-    <string name="alert_btn_useful">Actually doing something useful ✨</string>
-    <string name="alert_btn_continue">Keep going for now</string>
+    <string name="alert_btn_thank_you">Thank you</string>
+    <string name="alert_btn_relevant">I\'m working on something relevant</string>
+    <string name="alert_btn_intention_done">I\'ve finished one of my intentions</string>
+    <string name="alert_btn_ignore">Ignore this app for a while…</string>
+    <string name="alert_btn_back">← Back</string>
+
+    <!-- Intentions completion panel -->
+    <string name="alert_intentions_congrats_emoji">🎉</string>
+    <string name="alert_intentions_congrats">Nice work!</string>
+    <string name="alert_intentions_prompt">Which one did you finish?</string>
+    <string name="alert_intentions_empty">No intentions set yet.</string>
+
+    <!-- Ignore timer panel -->
+    <string name="alert_ignore_label">How long should I ignore this app?</string>
 
     <!-- Grounding moment (after "wrapping up") -->
     <string name="grounding_emoji">🌱</string>

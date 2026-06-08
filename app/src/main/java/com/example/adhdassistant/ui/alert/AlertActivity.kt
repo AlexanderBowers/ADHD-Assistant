@@ -1,11 +1,11 @@
 package com.example.adhdassistant.ui.alert
 
-import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.adhdassistant.ADHDApplication
 import com.example.adhdassistant.R
+import com.example.adhdassistant.config.IntentionItem
 import com.example.adhdassistant.data.AppDatabase
 import com.example.adhdassistant.databinding.ActivityAlertBinding
 import com.example.adhdassistant.domain.AdaptiveThresholdManager
@@ -21,24 +22,9 @@ import com.example.adhdassistant.tracking.ReAlertTracker
 import com.example.adhdassistant.tracking.UsageTrackingService
 import com.google.android.material.chip.Chip
 import com.google.android.material.shape.CornerFamily
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/**
- * The check-in alert screen.
- *
- * Three language levels based on consecutive "keep going" responses:
- *   FIRST  -- "Quick check-in! \uD83D\uDC4B"
- *   REPEAT -- "Hey again! \uD83D\uDE0A"
- *   MANY   -- "We keep meeting like this \uD83D\uDE04"
- *
- * Flow:
- *   -> "Wrapping up"        -> grounding moment -> close
- *   -> "Doing something useful" -> UsefulSessionActivity + snooze
- *   -> "Keep going"         -> log + close
- *
- * Back button disabled -- user must make an active choice.
- * The moment of choosing is the intervention.
- */
 class AlertActivity : AppCompatActivity() {
 
     companion object {
@@ -48,10 +34,16 @@ class AlertActivity : AppCompatActivity() {
         const val EXTRA_ALERT_LEVEL    = "alert_level"
         const val EXTRA_TRIGGER_TYPE   = "trigger_type"
 
-        /** Alert fired by the time-based continuous-usage threshold. */
         const val TRIGGER_TYPE_THRESHOLD = "threshold"
-        /** Alert fired immediately when a watched app opens. */
         const val TRIGGER_TYPE_ON_OPEN   = "on_open"
+
+        private val IGNORE_OPTIONS = listOf(
+            "15 min"  to 15,
+            "30 min"  to 30,
+            "1 hour"  to 60,
+            "4 hours" to 240,
+            "1 day"   to 1440
+        )
     }
 
     private lateinit var binding: ActivityAlertBinding
@@ -63,12 +55,10 @@ class AlertActivity : AppCompatActivity() {
     private var intentionText: String? = null
     private var alertLevel    = ReAlertTracker.AlertLevel.FIRST
     private var triggerType   = TRIGGER_TYPE_THRESHOLD
-    private var selectedChip: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Show on lock screen -- shoulder tap, not alarm
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -81,7 +71,6 @@ class AlertActivity : AppCompatActivity() {
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Warm sunrise gradient -- not dark, not alarming
         window.decorView.background = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(
@@ -97,7 +86,11 @@ class AlertActivity : AppCompatActivity() {
         database = AppDatabase.getDatabase(applicationContext)
 
         onBackPressedDispatcher.addCallback(this) {
-            // No back -- user must choose
+            // If a panel is open, go back to buttons; otherwise no-op
+            if (binding.layoutIntentions.visibility == View.VISIBLE ||
+                binding.layoutIgnore.visibility == View.VISIBLE) {
+                showButtons()
+            }
         }
 
         durationMs    = intent.getLongExtra(EXTRA_DURATION_MS, 0L)
@@ -111,26 +104,20 @@ class AlertActivity : AppCompatActivity() {
         applyWindowInsets()
         setupGreeting()
         setupIntentionCard()
-        setupGroundingChips()
         setupButtons()
+        setupIgnorePanel()
     }
 
     private fun applyWindowInsets() {
-        // The alert screen has two ScrollViews (alert content + grounding).
-        // Give each one extra bottom padding matching the system navigation bar,
-        // so the action buttons are never hidden behind permanent nav buttons.
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Extend the existing paddingBottom in each ScrollView's inner LinearLayout
-            listOf(binding.layoutAlert, binding.layoutGrounding).forEach { scrollView ->
-                val inner = scrollView.getChildAt(0)
-                inner?.setPadding(
-                    inner.paddingLeft,
-                    inner.paddingTop,
-                    inner.paddingRight,
-                    bars.bottom + resources.getDimensionPixelOffset(R.dimen.alert_bottom_extra)
-                )
-            }
+            val inner = binding.layoutAlert.getChildAt(0)
+            inner?.setPadding(
+                inner.paddingLeft,
+                inner.paddingTop,
+                inner.paddingRight,
+                bars.bottom + resources.getDimensionPixelOffset(R.dimen.alert_bottom_extra)
+            )
             insets
         }
     }
@@ -139,14 +126,13 @@ class AlertActivity : AppCompatActivity() {
         data class Greeting(val emoji: String, val title: String, val message: String)
 
         val g = if (triggerType == TRIGGER_TYPE_ON_OPEN) {
-            // On-open: prompt for intention before the user gets absorbed
             val appLabel = runCatching {
                 packageManager.getApplicationLabel(
                     packageManager.getApplicationInfo(appPackage, 0)
                 ).toString()
             }.getOrElse { appPackage }
             Greeting(
-                "\uD83C\uDFAF",
+                "🎯",
                 getString(R.string.alert_greeting_on_open),
                 getString(R.string.alert_message_on_open, appLabel)
             )
@@ -154,17 +140,17 @@ class AlertActivity : AppCompatActivity() {
             val minutes = (durationMs / 60_000).coerceAtLeast(1)
             when (alertLevel) {
                 ReAlertTracker.AlertLevel.FIRST -> Greeting(
-                    "\uD83D\uDC4B",
+                    "👋",
                     getString(R.string.alert_greeting_first),
                     getString(R.string.alert_message_first, minutes.toString())
                 )
                 ReAlertTracker.AlertLevel.REPEAT -> Greeting(
-                    "\uD83D\uDE0A",
+                    "😊",
                     getString(R.string.alert_greeting_repeat),
                     getString(R.string.alert_message_repeat, minutes.toString())
                 )
                 ReAlertTracker.AlertLevel.MANY -> Greeting(
-                    "\uD83D\uDE04",
+                    "😄",
                     getString(R.string.alert_greeting_many),
                     getString(R.string.alert_message_many)
                 )
@@ -185,19 +171,33 @@ class AlertActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupGroundingChips() {
-        val labels = listOf(
-            getString(R.string.alert_chip_browsing),
-            getString(R.string.alert_chip_lookup),
-            getString(R.string.alert_chip_fun),
-            getString(R.string.alert_chip_work),
-            getString(R.string.alert_chip_social),
-        )
+    private fun setupButtons() {
+        binding.btnThankYou.setOnClickListener {
+            logAction("IGNORED")
+            finish()
+        }
+        binding.btnRelevant.setOnClickListener {
+            logAction("USEFUL")
+            sendSnoozeToService(15)
+            finish()
+        }
+        binding.btnIntentionDone.setOnClickListener {
+            showPanel(binding.layoutIntentions)
+            loadIntentionsPanel()
+        }
+        binding.btnIgnore.setOnClickListener {
+            showPanel(binding.layoutIgnore)
+        }
 
-        labels.forEach { label ->
+        binding.btnIntentionsBack.setOnClickListener { showButtons() }
+        binding.btnIgnoreBack.setOnClickListener { showButtons() }
+    }
+
+    private fun setupIgnorePanel() {
+        IGNORE_OPTIONS.forEach { (label, minutes) ->
             val chip = Chip(this).apply {
-                text           = label
-                isCheckable    = true
+                text = label
+                isCheckable = true
                 shapeAppearanceModel = shapeAppearanceModel.toBuilder()
                     .setAllCorners(CornerFamily.ROUNDED, resources.getDimension(R.dimen.chip_corner_radius))
                     .build()
@@ -209,98 +209,82 @@ class AlertActivity : AppCompatActivity() {
             }
             chip.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
-                    selectedChip = label
-                    // Deselect others
-                    for (i in 0 until binding.chipGroupGrounding.childCount) {
-                        val c = binding.chipGroupGrounding.getChildAt(i) as? Chip
-                        if (c != chip) c?.isChecked = false
+                    val until = System.currentTimeMillis() + (minutes * 60_000L)
+                    lifecycleScope.launch {
+                        configRepository.setAppSnoozedUntil(appPackage, until)
+                        logAction("IGNORED")
+                        finish()
                     }
-                } else if (selectedChip == label) {
-                    selectedChip = null
                 }
             }
-            binding.chipGroupGrounding.addView(chip)
+            binding.chipGroupIgnore.addView(chip)
         }
     }
 
-    private fun setupButtons() {
-        binding.btnDone.setOnClickListener     { handleDone() }
-        binding.btnUseful.setOnClickListener   { handleUseful() }
-        binding.btnContinue.setOnClickListener { handleContinue() }
-    }
-
-    private fun handleDone() {
-        logAction("MOVED")
-        showGroundingMoment()
-    }
-
-    private fun handleUseful() {
-        logAction("USEFUL")
-        startActivity(Intent(this, UsefulSessionActivity::class.java))
-        sendSnoozeToService(15)
-        finish()
-    }
-
-    private fun handleContinue() {
-        logAction("IGNORED")
-        finish()
-    }
-
-    private fun showGroundingMoment() {
-        // Fade out the alert content
-        binding.layoutAlert.animate()
-            .alpha(0f).translationY(-32f).setDuration(220)
-            .withEndAction {
-                binding.layoutAlert.visibility    = View.GONE
-                binding.layoutGrounding.visibility = View.VISIBLE
-                binding.layoutGrounding.alpha      = 0f
-                binding.layoutGrounding.translationY = 48f
-
-                // Slide up with a gentle overshoot
-                binding.layoutGrounding.animate()
-                    .alpha(1f).translationY(0f).setDuration(380)
-                    .setInterpolator(android.view.animation.OvershootInterpolator(1.1f))
-                    .start()
+    private fun loadIntentionsPanel() {
+        binding.containerIntentionsList.removeAllViews()
+        lifecycleScope.launch {
+            val intentions = configRepository.intentionListFlow.first()
+            if (intentions.isEmpty()) {
+                binding.tvNoIntentions.visibility = View.VISIBLE
+            } else {
+                binding.tvNoIntentions.visibility = View.GONE
+                intentions.forEach { item -> addIntentionRow(item) }
             }
-            .start()
-
-        // Choose grounding message
-        binding.tvGroundingMessage.text = if (!selectedChip.isNullOrEmpty()) {
-            getString(R.string.grounding_message_with_chip, selectedChip!!.lowercase())
-        } else {
-            getString(R.string.grounding_message_generic)
         }
+    }
 
-        // Show intention as next-up prompt
-        if (!intentionText.isNullOrEmpty()) {
-            binding.cardGroundingIntention.visibility = View.VISIBLE
-            binding.tvGroundingIntention.text         = intentionText
+    private fun addIntentionRow(item: IntentionItem) {
+        val row = layoutInflater.inflate(
+            R.layout.item_intention_check,
+            binding.containerIntentionsList,
+            false
+        )
+        row.findViewById<TextView>(R.id.tvIntentionRowText).text = item.text
+        row.setOnClickListener {
+            lifecycleScope.launch {
+                val current = configRepository.intentionListFlow.first().toMutableList()
+                current.removeAll { it.id == item.id }
+                configRepository.updateIntentionList(current)
+                logAction("COMPLETED")
+                finish()
+            }
         }
+        binding.containerIntentionsList.addView(row)
+    }
 
-        binding.btnGroundingDone.setOnClickListener { finish() }
+    private fun showPanel(panel: View) {
+        binding.layoutButtons.animate().alpha(0f).setDuration(150).withEndAction {
+            binding.layoutButtons.visibility = View.GONE
+            panel.alpha = 0f
+            panel.visibility = View.VISIBLE
+            panel.animate().alpha(1f).setDuration(200).start()
+        }.start()
+    }
+
+    private fun showButtons() {
+        listOf(binding.layoutIntentions, binding.layoutIgnore).forEach { panel ->
+            if (panel.visibility == View.VISIBLE) {
+                panel.animate().alpha(0f).setDuration(150).withEndAction {
+                    panel.visibility = View.GONE
+                }.start()
+            }
+        }
+        binding.layoutButtons.alpha = 0f
+        binding.layoutButtons.visibility = View.VISIBLE
+        binding.layoutButtons.animate().alpha(1f).setDuration(200).start()
     }
 
     private fun logAction(action: String) {
         lifecycleScope.launch {
-            // 1. Grab the full active routine so we have its name and threshold
-            val routine = configRepository.getActiveRoutine() ?: com.example.adhdassistant.config.ConfigRepository.buildDefaultRoutine()
-            val routineId = routine.id
-            val routineName = routine.name
-            val currentThreshold = routine.alertThresholdMinutes ?: 5
-
-            database.activityEventDao().resolveLastEvent(routineId, action)
-
-            // Record grounding chip choice alongside the action for stats
-            selectedChip?.let { choice ->
-                database.activityEventDao().updateLastEventGroundingChoice(routineId, choice)
-            }
-
-            // 2. Pass all required parameters to the Adaptive Threshold Manager
+            val routine = configRepository.getActiveRoutine()
+                ?: com.example.adhdassistant.config.ConfigRepository.buildDefaultRoutine()
+            database.activityEventDao().resolveLastEvent(routine.id, action)
             AdaptiveThresholdManager(configRepository).recordAction(
                 action = action,
-                routineId = routineId,
-                routineName = routineName,
-                currentThreshold = currentThreshold
+                routineId = routine.id,
+                routineName = routine.name,
+                currentThreshold = routine.alertThresholdMinutes ?: 5
             )
         }
     }
